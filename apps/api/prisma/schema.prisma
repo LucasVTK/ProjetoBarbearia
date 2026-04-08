@@ -1,0 +1,246 @@
+// ============================================================
+// BarberPro — Schema do Banco de Dados
+// ORM: Prisma | Banco: PostgreSQL
+// ============================================================
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================================
+// ENUMs
+// ============================================================
+
+enum Role {
+  OWNER        // dono da barbearia
+  PROFESSIONAL // barbeiro com acesso ao painel
+}
+
+enum ServiceType {
+  SERVICE // serviço avulso (ex: corte, barba)
+  COMBO   // combo de serviços (ex: corte + barba)
+}
+
+enum AppointmentStatus {
+  PENDING     // aguardando
+  CONFIRMED   // confirmado
+  IN_PROGRESS // em atendimento
+  DONE        // concluído
+  CANCELLED   // cancelado
+  NO_SHOW     // cliente não apareceu
+}
+
+enum NotificationType {
+  CONFIRMATION // confirmação de agendamento
+  REMINDER     // lembrete antes do horário
+  CANCELLATION // aviso de cancelamento
+}
+
+// ============================================================
+// TABELA: users
+// Quem acessa o painel admin (dono ou profissional)
+// ============================================================
+model User {
+  id           String   @id @default(uuid())
+  name         String
+  email        String   @unique
+  phone        String?
+  passwordHash String   // bcrypt — NUNCA salvar senha em texto puro
+  role         Role     @default(OWNER)
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  ownedBarbershop Barbershop?    @relation("BarbershopOwner")
+  professional    Professional?
+  refreshTokens   RefreshToken[]
+
+  @@map("users")
+}
+
+// ============================================================
+// TABELA: refresh_tokens
+// Tokens de sessão com expiração — permite logout seguro
+// ============================================================
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("refresh_tokens")
+}
+
+// ============================================================
+// TABELA: barbershops
+// Cada barbearia cadastrada no sistema
+// ============================================================
+model Barbershop {
+  id          String   @id @default(uuid())
+  name        String
+  slug        String   @unique // URL: /agendar/barbearia-do-joao
+  phone       String?
+  address     String?
+  logoUrl     String?
+  description String?
+  ownerId     String   @unique
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  owner         User           @relation("BarbershopOwner", fields: [ownerId], references: [id])
+  professionals Professional[]
+  services      Service[]
+  schedules     Schedule[]
+  appointments  Appointment[]
+  notifications Notification[]
+  clients       Client[]
+
+  @@map("barbershops")
+}
+
+// ============================================================
+// TABELA: professionals
+// Barbeiros que trabalham na barbearia
+// ============================================================
+model Professional {
+  id           String   @id @default(uuid())
+  name         String
+  phone        String?
+  avatarUrl    String?
+  active       Boolean  @default(true)
+  barbershopId String
+  userId       String?  @unique // opcional: se tiver acesso ao painel
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  barbershop   Barbershop    @relation(fields: [barbershopId], references: [id])
+  user         User?         @relation(fields: [userId], references: [id])
+  schedules    Schedule[]
+  appointments Appointment[]
+
+  @@map("professionals")
+}
+
+// ============================================================
+// TABELA: services
+// Serviços e combos oferecidos pela barbearia
+// ============================================================
+model Service {
+  id           String      @id @default(uuid())
+  name         String
+  description  String?
+  price        Decimal     @db.Decimal(10, 2) // Decimal evita erro de arredondamento com dinheiro
+  duration     Int         // duração em minutos
+  type         ServiceType @default(SERVICE)
+  active       Boolean     @default(true)
+  barbershopId String
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  barbershop   Barbershop    @relation(fields: [barbershopId], references: [id])
+  appointments Appointment[]
+
+  @@map("services")
+}
+
+// ============================================================
+// TABELA: schedules
+// Horários de trabalho por dia da semana por profissional
+// ============================================================
+model Schedule {
+  id             String   @id @default(uuid())
+  barbershopId   String
+  professionalId String
+  dayOfWeek      Int      // 0=Dom 1=Seg 2=Ter 3=Qua 4=Qui 5=Sex 6=Sáb
+  startTime      String   // "09:00"
+  endTime        String   // "18:00"
+  active         Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  barbershop   Barbershop   @relation(fields: [barbershopId], references: [id])
+  professional Professional @relation(fields: [professionalId], references: [id])
+
+  @@unique([professionalId, dayOfWeek, startTime])
+  @@map("schedules")
+}
+
+// ============================================================
+// TABELA: clients
+// Clientes identificados pelo telefone — sem login
+// ============================================================
+model Client {
+  id           String   @id @default(uuid())
+  name         String
+  phone        String
+  barbershopId String
+  notes        String?  // anotações do barbeiro
+  noShowCount  Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  barbershop   Barbershop    @relation(fields: [barbershopId], references: [id])
+  appointments Appointment[]
+
+  @@unique([phone, barbershopId]) // mesmo telefone = mesmo cliente na barbearia
+  @@map("clients")
+}
+
+// ============================================================
+// TABELA: appointments
+// O coração do sistema — cada agendamento realizado
+// ============================================================
+model Appointment {
+  id             String            @id @default(uuid())
+  barbershopId   String
+  professionalId String
+  clientId       String
+  serviceId      String
+  date           DateTime          // início do atendimento
+  endTime        DateTime          // início + duração do serviço
+  status         AppointmentStatus @default(PENDING)
+  cancelToken    String            @unique @default(uuid()) // link único de cancelamento
+  cancelledAt    DateTime?
+  cancelReason   String?
+  notes          String?
+  price          Decimal           @db.Decimal(10, 2) // preço travado no momento do agendamento
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  barbershop    Barbershop     @relation(fields: [barbershopId], references: [id])
+  professional  Professional   @relation(fields: [professionalId], references: [id])
+  client        Client         @relation(fields: [clientId], references: [id])
+  service       Service        @relation(fields: [serviceId], references: [id])
+  notifications Notification[]
+
+  @@unique([professionalId, date]) // evita agendamento duplicado (race condition)
+  @@map("appointments")
+}
+
+// ============================================================
+// TABELA: notifications
+// Registro de todas as notificações enviadas
+// ============================================================
+model Notification {
+  id            String           @id @default(uuid())
+  barbershopId  String
+  appointmentId String
+  type          NotificationType
+  sentAt        DateTime?        // null = pendente de envio
+  error         String?          // mensagem de erro se falhou
+  createdAt     DateTime         @default(now())
+
+  barbershop  Barbershop  @relation(fields: [barbershopId], references: [id])
+  appointment Appointment @relation(fields: [appointmentId], references: [id])
+
+  @@map("notifications")
+}
