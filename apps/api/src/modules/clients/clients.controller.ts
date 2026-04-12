@@ -1,13 +1,6 @@
 import { Request, Response, NextFunction } from 'express'
 import { clientsService } from './clients.service'
-import { prisma } from '../../config/database'
-import { AppError } from '../../shared/errors/AppError'
-
-async function getBarbershopId(userId: string) {
-  const barbershop = await prisma.barbershop.findFirst({ where: { ownerId: userId } })
-  if (!barbershop) throw new AppError('Barbearia não encontrada', 404)
-  return barbershop.id
-}
+import { getBarbershopId } from '../../shared/helpers/getBarbershopId'
 
 export const clientsController = {
 

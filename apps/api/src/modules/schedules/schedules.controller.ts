@@ -1,14 +1,9 @@
 import { Request, Response, NextFunction } from 'express'
 import { upsertScheduleSchema } from './schedules.schema'
 import { schedulesService } from './schedules.service'
+import { getBarbershopId } from '../../shared/helpers/getBarbershopId'
 import { prisma } from '../../config/database'
 import { AppError } from '../../shared/errors/AppError'
-
-async function getBarbershopId(userId: string) {
-  const barbershop = await prisma.barbershop.findFirst({ where: { ownerId: userId } })
-  if (!barbershop) throw new AppError('Barbearia não encontrada', 404)
-  return barbershop.id
-}
 
 export const schedulesController = {
 
@@ -17,7 +12,6 @@ export const schedulesController = {
       const barbershopId   = await getBarbershopId(req.user!.id)
       const professionalId = req.query.professionalId as string
       if (!professionalId) throw new AppError('professionalId obrigatório', 400)
-
       const schedules = await schedulesService.list(barbershopId, professionalId)
       res.json(schedules)
     } catch (err) { next(err) }
@@ -48,7 +42,6 @@ export const schedulesController = {
       })
       if (!service) throw new AppError('Serviço não encontrado', 404)
 
-      // Se não informou profissional, usa o primeiro profissional ativo
       let profId = professionalId
       if (!profId) {
         const prof = await prisma.professional.findFirst({
@@ -58,10 +51,13 @@ export const schedulesController = {
         profId = prof.id
       }
 
+      const [y, mo, d] = date.split('-').map(Number)
+      const localDate = new Date(y, mo - 1, d)
+
       const slots = await schedulesService.getAvailableSlots(
         barbershop.id,
         profId,
-        new Date(date),
+        localDate,
         Number(service.duration)
       )
 

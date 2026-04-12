@@ -1,17 +1,9 @@
 import { Request, Response, NextFunction } from 'express'
 import { createServiceSchema, updateServiceSchema } from './services.schema'
 import { servicesService } from './services.service'
+import { getBarbershopId } from '../../shared/helpers/getBarbershopId'
 import { prisma } from '../../config/database'
 import { AppError } from '../../shared/errors/AppError'
-
-// Busca a barbearia do usuário logado
-async function getBarbershopId(userId: string): Promise<string> {
-  const barbershop = await prisma.barbershop.findFirst({
-    where: { ownerId: userId },
-  })
-  if (!barbershop) throw new AppError('Barbearia não encontrada', 404)
-  return barbershop.id
-}
 
 export const servicesController = {
 
@@ -29,7 +21,6 @@ export const servicesController = {
       const { slug } = req.params
       const barbershop = await prisma.barbershop.findUnique({ where: { slug } })
       if (!barbershop) throw new AppError('Barbearia não encontrada', 404)
-
       const services = await servicesService.listActive(barbershop.id)
       res.json(services)
     } catch (err) { next(err) }

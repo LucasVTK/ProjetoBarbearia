@@ -6,10 +6,9 @@ export const appointmentsService = {
 
   // Lista agendamentos de uma data (painel do barbeiro)
   async listByDate(barbershopId: string, date: string) {
-    const start = new Date(date)
-    start.setHours(0, 0, 0, 0)
-    const end = new Date(date)
-    end.setHours(23, 59, 59, 999)
+    const [y, m, d] = date.split('-').map(Number)
+    const start = new Date(y, m - 1, d,  0,  0,  0,   0)
+    const end   = new Date(y, m - 1, d, 23, 59, 59, 999)
 
     return prisma.appointment.findMany({
       where: {

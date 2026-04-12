@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
+import { api } from '../services/api'
 import {
   Scissors, LayoutDashboard, Calendar, Users,
   Briefcase, TrendingUp, Settings, LogOut, Menu, Bell, UserCheck,
@@ -22,8 +23,20 @@ function getInitials(name: string) {
 
 export function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const { user, barbershop, logout } = useAuthStore()
+  const [pendingCount, setPendingCount] = useState(0)
+  const { user, barbershop, logout, accessToken } = useAuthStore()
   const navigate = useNavigate()
+
+  useEffect(() => {
+    function fetchPending() {
+      api.get<{ today: { pending: number } }>('/api/dashboard', accessToken ?? undefined)
+        .then(data => setPendingCount(data.today.pending))
+        .catch(() => {})
+    }
+    fetchPending()
+    const interval = setInterval(fetchPending, 30_000) // atualiza a cada 30s
+    return () => clearInterval(interval)
+  }, [accessToken])
 
   async function handleLogout() {
     await logout()
@@ -108,10 +121,14 @@ export function AdminLayout() {
             <Menu className="w-5 h-5" />
           </button>
           <div className="hidden md:block" />
-          <button className="relative text-zinc-400 hover:text-white transition-colors">
+          <NavLink to="/admin/agenda" className="relative text-zinc-400 hover:text-white transition-colors">
             <Bell className="w-5 h-5" />
-            <span className="absolute -top-1 -right-1 w-2 h-2 bg-brand-500 rounded-full" />
-          </button>
+            {pendingCount > 0 && (
+              <span className="absolute -top-1 -right-1 min-w-[16px] h-4 bg-brand-500 rounded-full flex items-center justify-center text-white text-[10px] font-bold px-0.5">
+                {pendingCount > 9 ? '9+' : pendingCount}
+              </span>
+            )}
+          </NavLink>
         </header>
 
         <main className="flex-1 p-4 md:p-6 overflow-y-auto">

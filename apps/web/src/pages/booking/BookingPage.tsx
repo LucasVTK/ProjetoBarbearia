@@ -64,7 +64,10 @@ export function BookingPage() {
     setLoadingSlots(true)
     setTime(null)
 
-    const dateStr = selectedDate.toISOString().slice(0, 10)
+    const y = selectedDate.getFullYear()
+    const m = String(selectedDate.getMonth() + 1).padStart(2, '0')
+    const d = String(selectedDate.getDate()).padStart(2, '0')
+    const dateStr = `${y}-${m}-${d}`
     api.get<{ slots: string[]; professionalId: string }>(
       `/api/schedules/slots/${slug}?date=${dateStr}&serviceId=${selectedService.id}`
     )
