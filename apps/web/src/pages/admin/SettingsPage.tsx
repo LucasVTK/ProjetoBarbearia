@@ -305,7 +305,7 @@ function ScheduleTab({ token }: { token: string }) {
   if (professionals.length === 0) return (
     <div className="text-center py-16 text-zinc-500 text-sm">
       <Clock className="w-8 h-8 mx-auto mb-2 text-zinc-700" />
-      Cadastre um profissional antes de configurar os horários.
+      Não foi possível carregar seu perfil. Recarregue a página.
     </div>
   )
 
