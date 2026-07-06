@@ -1,13 +1,14 @@
 import { Router, Request, Response, NextFunction } from 'express'
 import { z } from 'zod'
 import { authenticate } from '../../shared/middlewares/authenticate'
+import { publicLimiter } from '../../shared/middlewares/rateLimiters'
 import { prisma } from '../../config/database'
 import { AppError } from '../../shared/errors/AppError'
 
 export const barbershopRouter = Router()
 
 // Pública — dados básicos para a página de agendamento do cliente
-barbershopRouter.get('/public/:slug', async (req: Request, res: Response, next: NextFunction) => {
+barbershopRouter.get('/public/:slug', publicLimiter, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const barbershop = await prisma.barbershop.findUnique({
       where: { slug: req.params.slug },

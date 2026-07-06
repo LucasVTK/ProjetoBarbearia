@@ -21,9 +21,19 @@ export function errorHandler(
     })
   }
 
-  // Violação de unicidade do banco (ex: dois agendamentos no mesmo horário)
-  if ((err as { code?: string }).code === 'P2002') {
+  // Erros conhecidos do Prisma — sem vazar detalhes internos
+  const prismaCode = (err as { code?: string }).code
+  if (prismaCode === 'P2002') {
+    // Violação de unicidade (ex: dois agendamentos no mesmo horário)
     return res.status(409).json({ error: 'Registro duplicado' })
+  }
+  if (prismaCode === 'P2023') {
+    // ID malformado na URL (ex: uuid inválido)
+    return res.status(400).json({ error: 'Identificador inválido' })
+  }
+  if (prismaCode === 'P2025') {
+    // update/delete de registro que não existe
+    return res.status(404).json({ error: 'Registro não encontrado' })
   }
 
   // Erro inesperado — não expõe detalhes internos para o cliente

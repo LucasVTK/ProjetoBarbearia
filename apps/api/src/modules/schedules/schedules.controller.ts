@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express'
-import { upsertScheduleSchema } from './schedules.schema'
+import { upsertScheduleSchema, getSlotsQuerySchema } from './schedules.schema'
 import { schedulesService } from './schedules.service'
 import { getBarbershopId } from '../../shared/helpers/getBarbershopId'
 import { prisma } from '../../config/database'
@@ -30,9 +30,7 @@ export const schedulesController = {
   async getSlots(req: Request, res: Response, next: NextFunction) {
     try {
       const { slug } = req.params
-      const { date, serviceId, professionalId } = req.query as Record<string, string>
-
-      if (!date || !serviceId) throw new AppError('date e serviceId são obrigatórios', 400)
+      const { date, serviceId, professionalId } = getSlotsQuerySchema.parse(req.query)
 
       const barbershop = await prisma.barbershop.findUnique({ where: { slug } })
       if (!barbershop) throw new AppError('Barbearia não encontrada', 404)

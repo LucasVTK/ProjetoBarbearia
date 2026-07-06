@@ -16,4 +16,12 @@ export const upsertScheduleSchema = z.object({
   ),
 })
 
+// Query da rota pública de slots — sem validação, uuid/data malformados
+// chegariam ao banco e virariam erro 500
+export const getSlotsQuerySchema = z.object({
+  date:           z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Data inválida, use AAAA-MM-DD'),
+  serviceId:      z.uuid('serviceId inválido'),
+  professionalId: z.uuid('professionalId inválido').optional(),
+})
+
 export type UpsertScheduleInput = z.infer<typeof upsertScheduleSchema>

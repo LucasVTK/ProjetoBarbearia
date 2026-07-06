@@ -26,3 +26,13 @@ export const bookingLimiter = rateLimit({
   legacyHeaders: false,
   message: { error: 'Muitos agendamentos em sequência. Aguarde alguns minutos.' },
 })
+
+// Endpoints públicos de leitura (serviços, slots, dados da barbearia) —
+// folgado para uso normal, mas barra scraping/flood
+export const publicLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 300,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Muitas requisições. Aguarde alguns minutos.' },
+})
