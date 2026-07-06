@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express'
 import { clientsService } from './clients.service'
+import { updateClientSchema } from './clients.schema'
 import { getBarbershopId } from '../../shared/helpers/getBarbershopId'
 
 export const clientsController = {
@@ -21,11 +22,11 @@ export const clientsController = {
     } catch (err) { next(err) }
   },
 
-  async updateNotes(req: Request, res: Response, next: NextFunction) {
+  async update(req: Request, res: Response, next: NextFunction) {
     try {
       const barbershopId = await getBarbershopId(req.user!.id)
-      const { notes } = req.body as { notes: string }
-      const result = await clientsService.updateNotes(req.params.id, barbershopId, notes ?? '')
+      const input = updateClientSchema.parse(req.body)
+      const result = await clientsService.update(req.params.id, barbershopId, input)
       res.json(result)
     } catch (err) { next(err) }
   },

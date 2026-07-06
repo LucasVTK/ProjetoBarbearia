@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Search, Phone, Calendar, TrendingUp, Clock, CheckCircle, XCircle, AlertCircle, ChevronRight, Loader2, FileText } from 'lucide-react'
+import { Search, Phone, Calendar, TrendingUp, Clock, CheckCircle, XCircle, AlertCircle, ChevronRight, Loader2, FileText, Pencil, Check, X } from 'lucide-react'
 import { api } from '../../services/api'
 import { useAuthStore } from '../../store/authStore'
 
@@ -63,6 +63,9 @@ export function ClientsPage() {
   const [error, setError]           = useState('')
   const [notes, setNotes]           = useState('')
   const [savingNotes, setSavingNotes] = useState(false)
+  const [editingName, setEditingName] = useState(false)
+  const [nameInput, setNameInput]     = useState('')
+  const [savingName, setSavingName]   = useState(false)
 
   const load = useCallback(async (q?: string) => {
     setLoading(true)
@@ -93,6 +96,8 @@ export function ClientsPage() {
       const data = await api.get<ClientDetail>(`/api/clients/${client.id}`, token ?? undefined)
       setSelected(data)
       setNotes(data.notes ?? '')
+      setNameInput(data.name)
+      setEditingName(false)
     } catch {
       setError('Erro ao carregar detalhes')
     } finally {
@@ -104,13 +109,36 @@ export function ClientsPage() {
     if (!selected) return
     setSavingNotes(true)
     try {
-      await api.patch(`/api/clients/${selected.id}/notes`, { notes }, token ?? undefined)
+      await api.patch(`/api/clients/${selected.id}`, { notes }, token ?? undefined)
       setSelected(prev => prev ? { ...prev, notes } : prev)
       setClients(prev => prev.map(c => c.id === selected.id ? { ...c, notes } : c))
     } catch {
       setError('Erro ao salvar anotações')
     } finally {
       setSavingNotes(false)
+    }
+  }
+
+  // Correção de nome — só o barbeiro pode (o agendamento público não altera
+  // mais o nome de telefone já cadastrado)
+  async function handleSaveName() {
+    if (!selected) return
+    const name = nameInput.trim()
+    if (name.length < 2 || name === selected.name) {
+      setEditingName(false)
+      setNameInput(selected.name)
+      return
+    }
+    setSavingName(true)
+    try {
+      await api.patch(`/api/clients/${selected.id}`, { name }, token ?? undefined)
+      setSelected(prev => prev ? { ...prev, name } : prev)
+      setClients(prev => prev.map(c => c.id === selected.id ? { ...c, name } : c))
+      setEditingName(false)
+    } catch {
+      setError('Erro ao salvar nome')
+    } finally {
+      setSavingName(false)
     }
   }
 
@@ -228,8 +256,45 @@ export function ClientsPage() {
                 <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white text-base font-bold flex-shrink-0 ${getAvatarColor(selected.name)}`}>
                   {getInitials(selected.name)}
                 </div>
-                <div>
-                  <p className="text-base font-bold text-white">{selected.name}</p>
+                <div className="flex-1 min-w-0">
+                  {editingName ? (
+                    <div className="flex items-center gap-1.5">
+                      <input
+                        type="text"
+                        value={nameInput}
+                        onChange={e => setNameInput(e.target.value)}
+                        onKeyDown={e => { if (e.key === 'Enter') handleSaveName(); if (e.key === 'Escape') { setEditingName(false); setNameInput(selected.name) } }}
+                        autoFocus
+                        className="flex-1 min-w-0 bg-zinc-800 border border-zinc-700 rounded-lg px-2.5 py-1.5 text-sm text-white focus:outline-none focus:border-brand-500 transition-colors"
+                      />
+                      <button
+                        onClick={handleSaveName}
+                        disabled={savingName || nameInput.trim().length < 2}
+                        className="p-1.5 text-green-400 hover:text-green-300 disabled:opacity-40 transition-colors flex-shrink-0"
+                        title="Salvar nome"
+                      >
+                        {savingName ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                      </button>
+                      <button
+                        onClick={() => { setEditingName(false); setNameInput(selected.name) }}
+                        className="p-1.5 text-zinc-500 hover:text-zinc-300 transition-colors flex-shrink-0"
+                        title="Cancelar"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <p className="text-base font-bold text-white truncate">{selected.name}</p>
+                      <button
+                        onClick={() => setEditingName(true)}
+                        className="text-zinc-600 hover:text-brand-400 transition-colors flex-shrink-0"
+                        title="Corrigir nome"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  )}
                   <p className="text-sm text-zinc-500">{selected.phone}</p>
                   <p className="text-xs text-zinc-600 mt-0.5">
                     Cliente desde {formatDate(selected.createdAt)}

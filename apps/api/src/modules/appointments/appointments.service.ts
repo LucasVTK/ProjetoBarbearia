@@ -1,7 +1,20 @@
+import { randomBytes } from 'crypto'
 import { prisma } from '../../config/database'
 import { AppError } from '../../shared/errors/AppError'
 import { schedulesService } from '../schedules/schedules.service'
+import { notificationsService } from '../notifications/notifications.service'
 import type { CreateAppointmentInput, UpdateStatusInput } from './appointments.schema'
+
+// Token curto e amigável para o link de cancelamento
+// (11 caracteres URL-safe, ~66 bits de aleatoriedade)
+function generateCancelToken() {
+  return randomBytes(8).toString('base64url')
+}
+
+// Notificação nunca pode derrubar a operação principal
+function fireAndForget(promise: Promise<unknown>) {
+  promise.catch(err => console.error('Erro ao enviar notificação:', err))
+}
 
 export const appointmentsService = {
 
@@ -62,7 +75,11 @@ export const appointmentsService = {
     const endTime = new Date(appointmentDate)
     endTime.setMinutes(endTime.getMinutes() + Number(service.duration))
 
-    // Busca ou cria o cliente pelo telefone
+    // Busca ou cria o cliente pelo telefone.
+    // Se o telefone JÁ existe, o nome cadastrado é mantido — senão qualquer
+    // pessoa que digitasse o número de outro cliente renomearia o cadastro
+    // dele (histórico, notas e no-shows iriam junto). Correção de nome só
+    // pelo painel do barbeiro.
     const client = await prisma.client.upsert({
       where: {
         phone_barbershopId: {
@@ -75,13 +92,11 @@ export const appointmentsService = {
         phone: input.clientPhone,
         barbershopId,
       },
-      update: {
-        name: input.clientName, // atualiza o nome se já existir
-      },
+      update: {},
     })
 
     try {
-      return await prisma.appointment.create({
+      const appointment = await prisma.appointment.create({
         data: {
           barbershopId,
           professionalId: input.professionalId,
@@ -90,12 +105,18 @@ export const appointmentsService = {
           date:           appointmentDate,
           endTime,
           price:          service.price,
+          cancelToken:    generateCancelToken(),
         },
         include: {
           client:  { select: { name: true, phone: true } },
           service: { select: { name: true } },
         },
       })
+
+      // Avisa o barbeiro (sino do painel + WhatsApp)
+      fireAndForget(notificationsService.notifyNewAppointment(appointment.id))
+
+      return appointment
     } catch (err) {
       // Race condition: dois clientes confirmando o mesmo horário ao mesmo
       // tempo — o unique(professionalId, date) do banco barra o segundo
@@ -122,7 +143,7 @@ export const appointmentsService = {
       })
     }
 
-    return prisma.appointment.update({
+    const updated = await prisma.appointment.update({
       where: { id },
       data: {
         status:       input.status,
@@ -130,6 +151,18 @@ export const appointmentsService = {
         cancelledAt:  ['CANCELLED', 'NO_SHOW'].includes(input.status) ? new Date() : null,
       },
     })
+
+    // Barbeiro aceitou → cliente recebe confirmação no WhatsApp + lembrete 24h
+    if (input.status === 'CONFIRMED' && appointment.status !== 'CONFIRMED') {
+      fireAndForget(notificationsService.sendClientConfirmation(id))
+    }
+
+    // Barbeiro cancelou → cliente é avisado no WhatsApp
+    if (input.status === 'CANCELLED' && appointment.status !== 'CANCELLED') {
+      fireAndForget(notificationsService.notifyCancellation(id, 'OWNER'))
+    }
+
+    return updated
   },
 
   // Cancelamento pelo cliente via token único — com regra de 2 horas
@@ -153,7 +186,7 @@ export const appointmentsService = {
       )
     }
 
-    return prisma.appointment.update({
+    const cancelled = await prisma.appointment.update({
       where: { cancelToken: token },
       data: {
         status:       'CANCELLED',
@@ -161,6 +194,11 @@ export const appointmentsService = {
         cancelledAt:  new Date(),
       },
     })
+
+    // Cliente cancelou → aparece no sino do painel do barbeiro
+    fireAndForget(notificationsService.notifyCancellation(cancelled.id, 'CLIENT'))
+
+    return cancelled
   },
 
   // Busca um agendamento pelo token (para a tela de cancelamento do cliente)

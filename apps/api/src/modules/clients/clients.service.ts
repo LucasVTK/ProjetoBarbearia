@@ -83,14 +83,15 @@ export const clientsService = {
     }
   },
 
-  async updateNotes(id: string, barbershopId: string, notes: string) {
+  // Atualiza nome e/ou anotações — só o barbeiro pode (rota autenticada)
+  async update(id: string, barbershopId: string, input: { name?: string; notes?: string }) {
     const client = await prisma.client.findFirst({ where: { id, barbershopId } })
     if (!client) throw new AppError('Cliente não encontrado', 404)
 
     return prisma.client.update({
       where: { id },
-      data: { notes },
-      select: { id: true, notes: true },
+      data: input,
+      select: { id: true, name: true, notes: true },
     })
   },
 }

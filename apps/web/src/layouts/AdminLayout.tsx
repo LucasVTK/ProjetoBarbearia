@@ -1,11 +1,56 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import { api } from '../services/api'
 import {
   Scissors, LayoutDashboard, Calendar, Users,
-  Briefcase, TrendingUp, Settings, LogOut, Menu, Bell, UserCheck,
+  Briefcase, TrendingUp, Settings, LogOut, Menu, Bell, UserCheck, BellOff,
 } from 'lucide-react'
+
+interface Notification {
+  id: string
+  type: string
+  message: string
+  readAt: string | null
+  createdAt: string
+  appointmentId: string
+  appointment: { date: string }
+}
+
+interface NotificationsResponse {
+  notifications: Notification[]
+  unreadCount: number
+}
+
+// Toque curto de sino via Web Audio — sem depender de arquivo de áudio
+function playBellSound() {
+  try {
+    const ctx = new AudioContext()
+    const osc = ctx.createOscillator()
+    const gain = ctx.createGain()
+    osc.connect(gain)
+    gain.connect(ctx.destination)
+    osc.type = 'sine'
+    osc.frequency.setValueAtTime(880, ctx.currentTime)
+    osc.frequency.setValueAtTime(1320, ctx.currentTime + 0.12)
+    gain.gain.setValueAtTime(0.001, ctx.currentTime)
+    gain.gain.exponentialRampToValueAtTime(0.15, ctx.currentTime + 0.02)
+    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.6)
+    osc.start()
+    osc.stop(ctx.currentTime + 0.65)
+  } catch {
+    // navegador bloqueou áudio antes da primeira interação — sem som
+  }
+}
+
+function timeAgo(iso: string) {
+  const min = Math.floor((Date.now() - new Date(iso).getTime()) / 60000)
+  if (min < 1) return 'agora'
+  if (min < 60) return `há ${min} min`
+  const hours = Math.floor(min / 60)
+  if (hours < 24) return `há ${hours}h`
+  return `há ${Math.floor(hours / 24)}d`
+}
 
 const navItems = [
   { to: '/admin',          icon: LayoutDashboard, label: 'Dashboard',   end: true },
@@ -23,20 +68,47 @@ function getInitials(name: string) {
 
 export function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [pendingCount, setPendingCount] = useState(0)
+  const [notifications, setNotifications] = useState<Notification[]>([])
+  const [unreadCount, setUnreadCount] = useState(0)
+  const [bellOpen, setBellOpen] = useState(false)
+  const prevUnread = useRef<number | null>(null)
   const { user, barbershop, logout, accessToken } = useAuthStore()
   const navigate = useNavigate()
 
-  useEffect(() => {
-    function fetchPending() {
-      api.get<{ today: { pending: number } }>('/api/dashboard', accessToken ?? undefined)
-        .then(data => setPendingCount(data.today.pending))
-        .catch(() => {})
+  const fetchNotifications = useCallback(async () => {
+    try {
+      const data = await api.get<NotificationsResponse>('/api/notifications', accessToken ?? undefined)
+      setNotifications(data.notifications)
+      setUnreadCount(data.unreadCount)
+
+      // Apita só quando CHEGA notificação nova (não no primeiro carregamento)
+      if (prevUnread.current !== null && data.unreadCount > prevUnread.current) {
+        playBellSound()
+      }
+      prevUnread.current = data.unreadCount
+    } catch {
+      // silencioso — tenta de novo no próximo ciclo
     }
-    fetchPending()
-    const interval = setInterval(fetchPending, 30_000) // atualiza a cada 30s
-    return () => clearInterval(interval)
   }, [accessToken])
+
+  useEffect(() => {
+    fetchNotifications()
+    const interval = setInterval(fetchNotifications, 30_000) // atualiza a cada 30s
+    return () => clearInterval(interval)
+  }, [fetchNotifications])
+
+  async function toggleBell() {
+    const opening = !bellOpen
+    setBellOpen(opening)
+    if (opening && unreadCount > 0) {
+      // Abriu o painel → marca tudo como lido
+      try {
+        await api.patch('/api/notifications/read', {}, accessToken ?? undefined)
+        setUnreadCount(0)
+        prevUnread.current = 0
+      } catch { /* mantém o contador se falhar */ }
+    }
+  }
 
   async function handleLogout() {
     await logout()
@@ -121,14 +193,64 @@ export function AdminLayout() {
             <Menu className="w-5 h-5" />
           </button>
           <div className="hidden md:block" />
-          <NavLink to="/admin/agenda" className="relative text-zinc-400 hover:text-white transition-colors">
-            <Bell className="w-5 h-5" />
-            {pendingCount > 0 && (
-              <span className="absolute -top-1 -right-1 min-w-[16px] h-4 bg-brand-500 rounded-full flex items-center justify-center text-white text-[10px] font-bold px-0.5">
-                {pendingCount > 9 ? '9+' : pendingCount}
-              </span>
+
+          {/* Sino de notificações */}
+          <div className="relative">
+            <button onClick={toggleBell} className="relative text-zinc-400 hover:text-white transition-colors">
+              <Bell className="w-5 h-5" />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-[16px] h-4 bg-brand-500 rounded-full flex items-center justify-center text-white text-[10px] font-bold px-0.5">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
+            </button>
+
+            {bellOpen && (
+              <>
+                {/* clique fora fecha */}
+                <div className="fixed inset-0 z-30" onClick={() => setBellOpen(false)} />
+
+                <div className="absolute right-0 top-8 z-40 w-80 max-w-[calc(100vw-2rem)] bg-zinc-900 border border-zinc-800 rounded-xl shadow-xl overflow-hidden">
+                  <div className="px-4 py-3 border-b border-zinc-800">
+                    <p className="text-sm font-semibold text-white">Notificações</p>
+                  </div>
+
+                  {notifications.length === 0 ? (
+                    <div className="flex flex-col items-center gap-2 py-10 text-zinc-600">
+                      <BellOff className="w-5 h-5" />
+                      <p className="text-xs">Nenhuma notificação ainda</p>
+                    </div>
+                  ) : (
+                    <div className="max-h-96 overflow-y-auto divide-y divide-zinc-800/60">
+                      {notifications.map(n => (
+                        <button
+                          key={n.id}
+                          onClick={() => {
+                            setBellOpen(false)
+                            // Vai direto para o dia do corte e destaca o agendamento
+                            const d = new Date(n.appointment.date)
+                            const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+                            navigate(`/admin/agenda?date=${dateStr}&highlight=${n.appointmentId}`)
+                          }}
+                          className="w-full text-left px-4 py-3 hover:bg-zinc-800/50 transition-colors flex gap-2.5"
+                        >
+                          {!n.readAt && (
+                            <span className="w-1.5 h-1.5 bg-brand-500 rounded-full mt-1.5 flex-shrink-0" />
+                          )}
+                          <div className={`min-w-0 ${n.readAt ? 'pl-4' : ''}`}>
+                            <p className="text-xs text-zinc-300 whitespace-pre-line leading-relaxed line-clamp-3">
+                              {n.message}
+                            </p>
+                            <p className="text-[10px] text-zinc-600 mt-1">{timeAgo(n.createdAt)}</p>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </>
             )}
-          </NavLink>
+          </div>
         </header>
 
         <main className="flex-1 p-4 md:p-6 overflow-y-auto">

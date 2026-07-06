@@ -1,7 +1,14 @@
 import { useState, useEffect, useCallback } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { ChevronLeft, ChevronRight, Clock, User, Scissors, CheckCircle, XCircle, AlertCircle, Loader2, Phone } from 'lucide-react'
 import { api } from '../../services/api'
 import { useAuthStore } from '../../store/authStore'
+
+function parseDateParam(param: string | null): Date | null {
+  if (!param || !/^\d{4}-\d{2}-\d{2}$/.test(param)) return null
+  const [y, m, d] = param.split('-').map(Number)
+  return new Date(y, m - 1, d)
+}
 
 type Status = 'PENDING' | 'CONFIRMED' | 'IN_PROGRESS' | 'DONE' | 'CANCELLED' | 'NO_SHOW'
 
@@ -56,16 +63,28 @@ function calcDuration(start: string, end: string) {
 
 export function AgendaPage() {
   const { accessToken } = useAuthStore()
-  const [selectedDate, setSelectedDate]   = useState(new Date())
+  const [searchParams, setSearchParams]   = useSearchParams()
+  const [selectedDate, setSelectedDate]   = useState(() => parseDateParam(searchParams.get('date')) ?? new Date())
   const [appointments, setAppointments]   = useState<Appointment[]>([])
   const [selected, setSelected]           = useState<Appointment | null>(null)
+  const [highlightId, setHighlightId]     = useState<string | null>(() => searchParams.get('highlight'))
   const [loading, setLoading]             = useState(true)
   const [updating, setUpdating]           = useState(false)
   const [error, setError]                 = useState('')
 
-  const fetchAppointments = useCallback(async () => {
-    setLoading(true)
-    setError('')
+  // Clique em notificação com a agenda já aberta → troca dia e destaque
+  useEffect(() => {
+    const date = parseDateParam(searchParams.get('date'))
+    if (date) setSelectedDate(date)
+    const highlight = searchParams.get('highlight')
+    if (highlight) setHighlightId(highlight)
+  }, [searchParams])
+
+  const fetchAppointments = useCallback(async (silent = false) => {
+    if (!silent) {
+      setLoading(true)
+      setError('')
+    }
     try {
       const data = await api.get<Appointment[]>(
         `/api/appointments?date=${toDateString(selectedDate)}`,
@@ -73,13 +92,34 @@ export function AgendaPage() {
       )
       setAppointments(data)
     } catch {
-      setError('Erro ao carregar agendamentos')
+      if (!silent) setError('Erro ao carregar agendamentos')
     } finally {
-      setLoading(false)
+      if (!silent) setLoading(false)
     }
   }, [selectedDate, accessToken])
 
-  useEffect(() => { fetchAppointments() }, [fetchAppointments])
+  // Carrega ao abrir/trocar de dia + atualiza sozinha a cada 15s
+  // (agendamentos novos aparecem sem precisar dar refresh)
+  useEffect(() => {
+    fetchAppointments()
+    const interval = setInterval(() => fetchAppointments(true), 15_000)
+    return () => clearInterval(interval)
+  }, [fetchAppointments])
+
+  // Quando a lista carrega com um destaque pendente, abre os detalhes
+  // do agendamento e rola até o card
+  useEffect(() => {
+    if (!highlightId || loading) return
+    const apt = appointments.find(a => a.id === highlightId)
+    if (apt) {
+      setSelected(apt)
+      setTimeout(() => {
+        document.getElementById(`apt-${apt.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      }, 100)
+    }
+    setHighlightId(null)
+    setSearchParams({}, { replace: true }) // limpa a URL p/ não reabrir no refresh
+  }, [highlightId, loading, appointments, setSearchParams])
 
   async function changeStatus(id: string, status: Status) {
     setUpdating(true)
@@ -185,6 +225,7 @@ export function AgendaPage() {
             return (
               <button
                 key={apt.id}
+                id={`apt-${apt.id}`}
                 onClick={() => setSelected(apt)}
                 className={`w-full text-left bg-zinc-900 border rounded-xl px-4 py-3.5 flex items-center gap-3 transition-all hover:border-zinc-700 ${
                   isActive ? 'border-brand-500/50' : 'border-zinc-800'

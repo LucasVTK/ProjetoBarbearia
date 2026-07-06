@@ -8,6 +8,7 @@ import { clientsRouter }       from './modules/clients/clients.routes'
 import { dashboardRouter }     from './modules/dashboard/dashboard.routes'
 import { financeRouter }       from './modules/finance/finance.routes'
 import { barbershopRouter }    from './modules/barbershop/barbershop.routes'
+import { notificationsRouter } from './modules/notifications/notifications.routes'
 
 export const router = Router()
 
@@ -24,3 +25,4 @@ router.use('/clients',       clientsRouter)
 router.use('/dashboard',     dashboardRouter)
 router.use('/finance',       financeRouter)
 router.use('/barbershop',    barbershopRouter)
+router.use('/notifications', notificationsRouter)

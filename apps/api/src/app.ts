@@ -4,6 +4,7 @@ import cors from 'cors'
 import helmet from 'helmet'
 import { router } from './routes'
 import { errorHandler } from './shared/middlewares/errorHandler'
+import { notificationsService } from './modules/notifications/notifications.service'
 
 const app = express()
 const PORT = process.env.PORT || 3333
@@ -34,3 +35,12 @@ app.listen(PORT, () => {
   console.log(`\n🚀 BarberPro API rodando em http://localhost:${PORT}`)
   console.log(`📋 Health check: http://localhost:${PORT}/health\n`)
 })
+
+// Agendador de lembretes: a cada minuto envia as notificações cujo
+// horário programado (24h antes do corte) já chegou
+function runScheduledNotifications() {
+  notificationsService.processScheduled()
+    .catch(err => console.error('Erro no agendador de lembretes:', err))
+}
+runScheduledNotifications()
+setInterval(runScheduledNotifications, 60_000)

@@ -36,9 +36,15 @@ enum AppointmentStatus {
 }
 
 enum NotificationType {
-  CONFIRMATION // confirmação de agendamento
-  REMINDER     // lembrete antes do horário
-  CANCELLATION // aviso de cancelamento
+  CONFIRMATION    // confirmação de agendamento (cliente)
+  REMINDER        // lembrete 24h antes do horário (cliente)
+  CANCELLATION    // aviso de cancelamento
+  NEW_APPOINTMENT // agendamento novo (barbeiro)
+}
+
+enum NotificationRecipient {
+  CLIENT // cliente da barbearia — recebe via WhatsApp
+  OWNER  // dono/barbeiro — aparece no sino do painel (e WhatsApp)
 }
 
 // ============================================================
@@ -231,13 +237,18 @@ model Appointment {
 // Registro de todas as notificações enviadas
 // ============================================================
 model Notification {
-  id            String           @id @default(uuid())
+  id            String                @id @default(uuid())
   barbershopId  String
   appointmentId String
   type          NotificationType
-  sentAt        DateTime?        // null = pendente de envio
-  error         String?          // mensagem de erro se falhou
-  createdAt     DateTime         @default(now())
+  recipient     NotificationRecipient @default(CLIENT)
+  phone         String?               // destino no WhatsApp (null = só painel)
+  message       String                // texto completo da mensagem
+  scheduledFor  DateTime?             // envio agendado (lembrete 24h); null = imediato
+  sentAt        DateTime?             // null = pendente de envio
+  readAt        DateTime?             // controle de "não lida" no sino do painel
+  error         String?               // mensagem de erro se falhou
+  createdAt     DateTime              @default(now())
 
   barbershop  Barbershop  @relation(fields: [barbershopId], references: [id])
   appointment Appointment @relation(fields: [appointmentId], references: [id])
