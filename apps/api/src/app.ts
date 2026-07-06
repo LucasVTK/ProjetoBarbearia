@@ -14,8 +14,16 @@ app.set('trust proxy', 1)
 
 // Segurança
 app.use(helmet())
+
+// CORS: lista fechada de origens permitidas.
+// FRONTEND_URL aceita várias URLs separadas por vírgula (o Vercel cria
+// mais de um domínio para o mesmo site) e tolera barra no final.
+const allowedOrigins = (process.env.FRONTEND_URL ?? 'http://localhost:5173')
+  .split(',')
+  .map(origin => origin.trim().replace(/\/+$/, ''))
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL ?? 'http://localhost:5173',
+  origin: allowedOrigins,
   credentials: true,
 }))
 app.use(express.json())
