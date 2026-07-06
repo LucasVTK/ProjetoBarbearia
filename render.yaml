@@ -1,0 +1,24 @@
+# Blueprint do Render — deploy gratuito da API
+# No painel: New + > Blueprint > selecionar este repositório
+services:
+  - type: web
+    name: barberpro-api
+    runtime: node
+    plan: free
+    rootDir: apps/api
+    buildCommand: npm install && npm run build
+    startCommand: npm run migrate && npm run start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: TZ
+        value: America/Sao_Paulo
+      - key: DATABASE_URL
+        sync: false # preencher no painel: connection string do Neon (branch production)
+      - key: JWT_SECRET
+        sync: false # preencher no painel: chave aleatoria nova
+      - key: REFRESH_TOKEN_SECRET
+        sync: false # preencher no painel: chave aleatoria nova
+      - key: FRONTEND_URL
+        sync: false # preencher no painel: URL do site no Vercel
