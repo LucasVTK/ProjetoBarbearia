@@ -8,7 +8,6 @@ import { ServicesPage } from './pages/admin/ServicesPage'
 import { AgendaPage } from './pages/admin/AgendaPage'
 import { ClientsPage } from './pages/admin/ClientsPage'
 import { FinancePage } from './pages/admin/FinancePage'
-import { ProfessionalsPage } from './pages/admin/ProfessionalsPage'
 import { SettingsPage } from './pages/admin/SettingsPage'
 import { BookingPage } from './pages/booking/BookingPage'
 import { CancelPage } from './pages/booking/CancelPage'
@@ -35,7 +34,6 @@ export default function App() {
         <Route index element={<DashboardPage />} />
         <Route path="agenda"   element={<AgendaPage />} />
         <Route path="services"      element={<ServicesPage />} />
-        <Route path="professionals" element={<ProfessionalsPage />} />
         <Route path="clients"       element={<ClientsPage />} />
         <Route path="finance"       element={<FinancePage />} />
         <Route path="settings"      element={<SettingsPage />} />

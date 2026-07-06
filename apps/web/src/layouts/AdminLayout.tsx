@@ -4,7 +4,7 @@ import { useAuthStore } from '../store/authStore'
 import { api } from '../services/api'
 import {
   Scissors, LayoutDashboard, Calendar, Users,
-  Briefcase, TrendingUp, Settings, LogOut, Menu, Bell, UserCheck, BellOff,
+  Briefcase, TrendingUp, Settings, LogOut, Menu, Bell, BellOff,
 } from 'lucide-react'
 
 interface Notification {
@@ -55,9 +55,8 @@ function timeAgo(iso: string) {
 const navItems = [
   { to: '/admin',          icon: LayoutDashboard, label: 'Dashboard',   end: true },
   { to: '/admin/agenda',   icon: Calendar,        label: 'Agenda'              },
-  { to: '/admin/services',      icon: Briefcase,       label: 'Serviços'        },
-  { to: '/admin/professionals', icon: UserCheck,        label: 'Profissionais'   },
-  { to: '/admin/clients',       icon: Users,           label: 'Clientes'        },
+  { to: '/admin/services', icon: Briefcase,       label: 'Serviços'            },
+  { to: '/admin/clients',  icon: Users,           label: 'Clientes'            },
   { to: '/admin/finance',  icon: TrendingUp,      label: 'Financeiro'          },
   { to: '/admin/settings', icon: Settings,        label: 'Configurações'       },
 ]

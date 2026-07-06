@@ -69,8 +69,10 @@ export const authService = {
     // 3. Hash da senha — NUNCA salvar em texto puro
     const passwordHash = await bcrypt.hash(input.password, 12)
 
-    // 4. Cria usuário + barbearia numa única transação
+    // 4. Cria usuário + barbearia + profissional numa única transação
     // Se qualquer parte falhar, nada é salvo (tudo ou nada)
+    // A plataforma é unitária: o dono É o barbeiro, então o profissional
+    // é criado automaticamente — agenda e agendamentos ficam ligados a ele
     const { user, barbershop } = await prisma.$transaction(async (tx) => {
       const user = await tx.user.create({
         data: {
@@ -87,6 +89,15 @@ export const authService = {
           name:    input.barbershopName,
           slug,
           ownerId: user.id,
+        },
+      })
+
+      await tx.professional.create({
+        data: {
+          name:         input.ownerName,
+          phone:        input.phone,
+          barbershopId: barbershop.id,
+          userId:       user.id,
         },
       })
 
