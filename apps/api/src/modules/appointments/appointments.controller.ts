@@ -19,6 +19,7 @@ export const appointmentsController = {
       const now = new Date()
       const defaultDate = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`
       const date = (req.query.date as string) ?? defaultDate
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) throw new AppError('Data inválida, use AAAA-MM-DD', 400)
       const appointments = await appointmentsService.listByDate(barbershopId, date)
       res.json(appointments)
     } catch (err) { next(err) }

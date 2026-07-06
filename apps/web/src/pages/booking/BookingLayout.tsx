@@ -2,15 +2,15 @@ import { Scissors } from 'lucide-react'
 
 interface Props {
   step: number       // 1, 2, 3
-  total: number
   title: string
   subtitle?: string
+  barbershopName?: string
   children: React.ReactNode
 }
 
 const steps = ['Serviço', 'Horário', 'Confirmar']
 
-export function BookingLayout({ step, total, title, subtitle, children }: Props) {
+export function BookingLayout({ step, title, subtitle, barbershopName, children }: Props) {
   return (
     <div className="min-h-screen bg-zinc-950 flex flex-col max-w-lg mx-auto">
 
@@ -22,7 +22,7 @@ export function BookingLayout({ step, total, title, subtitle, children }: Props)
             <Scissors className="w-4 h-4 text-white" />
           </div>
           <div>
-            <p className="text-sm font-bold text-white leading-none">Barbearia do João</p>
+            <p className="text-sm font-bold text-white leading-none">{barbershopName ?? 'Agendamento'}</p>
             <p className="text-xs text-zinc-500">Agendamento online</p>
           </div>
         </div>

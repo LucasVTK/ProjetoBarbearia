@@ -16,11 +16,13 @@ function toSlug(name: string): string {
     .replace(/\s+/g, '-')
 }
 
+type ExpiresIn = NonNullable<jwt.SignOptions['expiresIn']>
+
 function generateAccessToken(userId: string, role: string) {
   return jwt.sign(
     { sub: userId, role },
     process.env.JWT_SECRET!,
-    { expiresIn: process.env.JWT_EXPIRES_IN ?? '15m' }
+    { expiresIn: (process.env.JWT_EXPIRES_IN ?? '15m') as ExpiresIn }
   )
 }
 
@@ -28,8 +30,25 @@ function generateRefreshToken(userId: string) {
   return jwt.sign(
     { sub: userId },
     process.env.REFRESH_TOKEN_SECRET!,
-    { expiresIn: process.env.REFRESH_TOKEN_EXPIRES_IN ?? '7d' }
+    { expiresIn: (process.env.REFRESH_TOKEN_EXPIRES_IN ?? '7d') as ExpiresIn }
   )
+}
+
+const REFRESH_TOKEN_DAYS = 7
+
+// Gera, persiste e retorna um novo refresh token para o usuário.
+// Aproveita para limpar tokens já expirados (senão acumulam para sempre).
+async function createRefreshToken(userId: string) {
+  const token = generateRefreshToken(userId)
+  const expiresAt = new Date()
+  expiresAt.setDate(expiresAt.getDate() + REFRESH_TOKEN_DAYS)
+
+  await prisma.refreshToken.deleteMany({
+    where: { userId, expiresAt: { lt: new Date() } },
+  })
+  await prisma.refreshToken.create({ data: { token, userId, expiresAt } })
+
+  return token
 }
 
 export const authService = {
@@ -76,15 +95,7 @@ export const authService = {
 
     // 5. Gera tokens
     const accessToken  = generateAccessToken(user.id, user.role)
-    const refreshToken = generateRefreshToken(user.id)
-
-    // 6. Salva refresh token no banco com expiração de 7 dias
-    const expiresAt = new Date()
-    expiresAt.setDate(expiresAt.getDate() + 7)
-
-    await prisma.refreshToken.create({
-      data: { token: refreshToken, userId: user.id, expiresAt },
-    })
+    const refreshToken = await createRefreshToken(user.id)
 
     return {
       accessToken,
@@ -112,14 +123,7 @@ export const authService = {
 
     // 3. Gera tokens
     const accessToken  = generateAccessToken(user.id, user.role)
-    const refreshToken = generateRefreshToken(user.id)
-
-    const expiresAt = new Date()
-    expiresAt.setDate(expiresAt.getDate() + 7)
-
-    await prisma.refreshToken.create({
-      data: { token: refreshToken, userId: user.id, expiresAt },
-    })
+    const refreshToken = await createRefreshToken(user.id)
 
     return {
       accessToken,
@@ -152,16 +156,8 @@ export const authService = {
     if (!user || !user.active) throw new AppError('Usuário não encontrado', 401)
 
     // 4. Rotaciona o refresh token (invalida o antigo, gera um novo)
-    const newRefreshToken = generateRefreshToken(user.id)
-    const expiresAt = new Date()
-    expiresAt.setDate(expiresAt.getDate() + 7)
-
-    await prisma.$transaction([
-      prisma.refreshToken.delete({ where: { token } }),
-      prisma.refreshToken.create({
-        data: { token: newRefreshToken, userId: user.id, expiresAt },
-      }),
-    ])
+    await prisma.refreshToken.delete({ where: { token } })
+    const newRefreshToken = await createRefreshToken(user.id)
 
     return {
       accessToken:  generateAccessToken(user.id, user.role),

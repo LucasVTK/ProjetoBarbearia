@@ -1,7 +1,7 @@
 import { Router, Request, Response, NextFunction } from 'express'
 import { authenticate } from '../../shared/middlewares/authenticate'
 import { prisma } from '../../config/database'
-import { AppError } from '../../shared/errors/AppError'
+import { getBarbershopId } from '../../shared/helpers/getBarbershopId'
 
 export const financeRouter = Router()
 
@@ -9,8 +9,7 @@ financeRouter.use(authenticate)
 
 financeRouter.get('/', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const barbershop = await prisma.barbershop.findFirst({ where: { ownerId: req.user!.id } })
-    if (!barbershop) throw new AppError('Barbearia não encontrada', 404)
+    const barbershopId = await getBarbershopId(req.user!.id)
 
     const period = (req.query.period as string) ?? 'month'
     const now = new Date()
@@ -34,7 +33,7 @@ financeRouter.get('/', async (req: Request, res: Response, next: NextFunction) =
 
     const appointments = await prisma.appointment.findMany({
       where: {
-        barbershopId: barbershop.id,
+        barbershopId,
         date: { gte: start, lte: end },
         status: { in: ['DONE', 'CANCELLED', 'NO_SHOW'] },
       },

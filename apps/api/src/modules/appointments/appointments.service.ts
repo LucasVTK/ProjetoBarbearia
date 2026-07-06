@@ -1,5 +1,6 @@
 import { prisma } from '../../config/database'
 import { AppError } from '../../shared/errors/AppError'
+import { schedulesService } from '../schedules/schedules.service'
 import type { CreateAppointmentInput, UpdateStatusInput } from './appointments.schema'
 
 export const appointmentsService = {
@@ -24,30 +25,42 @@ export const appointmentsService = {
     })
   },
 
-  // Cria um agendamento — com proteção contra race condition
+  // Cria um agendamento — valida serviço, profissional e horário oferecido
   async create(barbershopId: string, input: CreateAppointmentInput) {
     const service = await prisma.service.findFirst({
       where: { id: input.serviceId, barbershopId, active: true },
     })
     if (!service) throw new AppError('Serviço não encontrado', 404)
 
+    // O profissional precisa pertencer a ESTA barbearia e estar ativo
+    const professional = await prisma.professional.findFirst({
+      where: { id: input.professionalId, barbershopId, active: true },
+    })
+    if (!professional) throw new AppError('Profissional não encontrado', 404)
+
     const appointmentDate = new Date(input.date)
+    if (appointmentDate.getTime() <= Date.now()) {
+      throw new AppError('Não é possível agendar em uma data que já passou', 400)
+    }
+
+    // Só aceita horários que o sistema realmente oferece: dentro da jornada
+    // do profissional, sem conflito com outros agendamentos e não no passado
+    const requestedSlot =
+      `${String(appointmentDate.getHours()).padStart(2, '0')}:` +
+      `${String(appointmentDate.getMinutes()).padStart(2, '0')}`
+
+    const availableSlots = await schedulesService.getAvailableSlots(
+      barbershopId,
+      input.professionalId,
+      appointmentDate,
+      Number(service.duration)
+    )
+    if (!availableSlots.includes(requestedSlot)) {
+      throw new AppError('Horário não disponível', 409)
+    }
+
     const endTime = new Date(appointmentDate)
     endTime.setMinutes(endTime.getMinutes() + Number(service.duration))
-
-    // Verifica conflito de horário antes de criar
-    const conflict = await prisma.appointment.findFirst({
-      where: {
-        professionalId: input.professionalId,
-        status: { in: ['PENDING', 'CONFIRMED', 'IN_PROGRESS'] },
-        OR: [
-          { date: { gte: appointmentDate, lt: endTime } },
-          { endTime: { gt: appointmentDate, lte: endTime } },
-          { date: { lte: appointmentDate }, endTime: { gte: endTime } },
-        ],
-      },
-    })
-    if (conflict) throw new AppError('Horário não disponível', 409)
 
     // Busca ou cria o cliente pelo telefone
     const client = await prisma.client.upsert({
@@ -67,21 +80,30 @@ export const appointmentsService = {
       },
     })
 
-    return prisma.appointment.create({
-      data: {
-        barbershopId,
-        professionalId: input.professionalId,
-        clientId:       client.id,
-        serviceId:      input.serviceId,
-        date:           appointmentDate,
-        endTime,
-        price:          service.price,
-      },
-      include: {
-        client:  { select: { name: true, phone: true } },
-        service: { select: { name: true } },
-      },
-    })
+    try {
+      return await prisma.appointment.create({
+        data: {
+          barbershopId,
+          professionalId: input.professionalId,
+          clientId:       client.id,
+          serviceId:      input.serviceId,
+          date:           appointmentDate,
+          endTime,
+          price:          service.price,
+        },
+        include: {
+          client:  { select: { name: true, phone: true } },
+          service: { select: { name: true } },
+        },
+      })
+    } catch (err) {
+      // Race condition: dois clientes confirmando o mesmo horário ao mesmo
+      // tempo — o unique(professionalId, date) do banco barra o segundo
+      if ((err as { code?: string }).code === 'P2002') {
+        throw new AppError('Horário não disponível', 409)
+      }
+      throw err
+    }
   },
 
   // Atualiza status (painel do barbeiro)
@@ -92,7 +114,8 @@ export const appointmentsService = {
     if (!appointment) throw new AppError('Agendamento não encontrado', 404)
 
     // Se marcou como no-show, incrementa o contador do cliente
-    if (input.status === 'NO_SHOW') {
+    // (só na transição — evita contar duas vezes o mesmo agendamento)
+    if (input.status === 'NO_SHOW' && appointment.status !== 'NO_SHOW') {
       await prisma.client.update({
         where: { id: appointment.clientId },
         data: { noShowCount: { increment: 1 } },

@@ -1,11 +1,12 @@
 import { z } from 'zod'
 
 export const createAppointmentSchema = z.object({
-  serviceId:      z.string().uuid(),
-  professionalId: z.string().uuid(),
-  date:           z.string().datetime({ message: 'Data inválida' }),
-  clientName:     z.string().min(2, 'Nome muito curto'),
-  clientPhone:    z.string().min(10, 'Telefone inválido'),
+  serviceId:      z.uuid(),
+  professionalId: z.uuid(),
+  date:           z.iso.datetime({ message: 'Data inválida' }),
+  clientName:     z.string().min(2, 'Nome muito curto').max(100, 'Nome muito longo'),
+  clientPhone:    z.string().min(10, 'Telefone inválido').max(15, 'Telefone inválido')
+                    .regex(/^\d+$/, 'Telefone deve conter apenas números'),
 })
 
 export const updateStatusSchema = z.object({

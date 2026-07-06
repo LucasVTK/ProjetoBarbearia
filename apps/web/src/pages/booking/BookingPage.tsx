@@ -40,6 +40,7 @@ export function BookingPage() {
   const [copied, setCopied]           = useState(false)
   const [done, setDone]               = useState(false)
 
+  const [barbershopName, setBarbershopName] = useState<string>()
   const [services, setServices]             = useState<Service[]>([])
   const [slots, setSlots]                   = useState<string[]>([])
   const [loadingServices, setLoadingServices] = useState(true)
@@ -49,9 +50,12 @@ export function BookingPage() {
 
   const days = getNextDays(14) // 2 semanas de antecedência
 
-  // Carrega serviços da barbearia
+  // Carrega dados da barbearia e serviços
   useEffect(() => {
     if (!slug) return
+    api.get<{ name: string }>(`/api/barbershop/public/${slug}`)
+      .then(data => setBarbershopName(data.name))
+      .catch(() => {})
     api.get<Service[]>(`/api/services/public/${slug}`)
       .then(setServices)
       .catch(() => setError('Erro ao carregar serviços'))
@@ -177,7 +181,7 @@ export function BookingPage() {
   // --- Step 1: Serviço ---
   if (step === 1) {
     return (
-      <BookingLayout step={1} total={3} title="Escolha o serviço" subtitle="Selecione o que deseja fazer">
+      <BookingLayout step={1} barbershopName={barbershopName} title="Escolha o serviço" subtitle="Selecione o que deseja fazer">
         {loadingServices ? (
           <div className="flex justify-center py-16">
             <Loader2 className="w-6 h-6 text-brand-500 animate-spin" />
@@ -216,7 +220,7 @@ export function BookingPage() {
   // --- Step 2: Horário ---
   if (step === 2) {
     return (
-      <BookingLayout step={2} total={3} title="Escolha o horário" subtitle={selectedService?.name}>
+      <BookingLayout step={2} barbershopName={barbershopName} title="Escolha o horário" subtitle={selectedService?.name}>
         <div className="space-y-5 mt-2">
 
           {/* Seletor de dias — scroll horizontal, 14 dias */}
@@ -298,7 +302,7 @@ export function BookingPage() {
 
   // --- Step 3: Confirmação ---
   return (
-    <BookingLayout step={3} total={3} title="Confirmar agendamento" subtitle="Só mais um passo">
+    <BookingLayout step={3} barbershopName={barbershopName} title="Confirmar agendamento" subtitle="Só mais um passo">
       <div className="space-y-5 mt-2">
 
         <div className="bg-zinc-900 border border-zinc-800 rounded-xl divide-y divide-zinc-800">

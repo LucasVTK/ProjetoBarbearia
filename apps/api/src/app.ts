@@ -1,4 +1,4 @@
-import 'dotenv/config'
+import './config/env'
 import express from 'express'
 import cors from 'cors'
 import helmet from 'helmet'
@@ -7,6 +7,9 @@ import { errorHandler } from './shared/middlewares/errorHandler'
 
 const app = express()
 const PORT = process.env.PORT || 3333
+
+// Necessário atrás de proxy (Railway) para o rate limit enxergar o IP real
+app.set('trust proxy', 1)
 
 // Segurança
 app.use(helmet())

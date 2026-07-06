@@ -27,6 +27,7 @@ interface AuthState {
   register: (data: RegisterData) => Promise<void>
   logout: () => Promise<void>
   setTokens: (accessToken: string, refreshToken: string) => void
+  clearSession: () => void
   setHydrated: () => void
 }
 
@@ -61,6 +62,16 @@ export const useAuthStore = create<AuthState>()(
         set({ accessToken, refreshToken })
       },
 
+      clearSession: () => {
+        set({
+          user: null,
+          barbershop: null,
+          accessToken: null,
+          refreshToken: null,
+          isAuthenticated: false,
+        })
+      },
+
       login: async (email, password) => {
         const data = await api.post<AuthResponse>('/api/auth/login', { email, password })
         set({
@@ -84,18 +95,12 @@ export const useAuthStore = create<AuthState>()(
       },
 
       logout: async () => {
-        const { refreshToken } = get()
+        const { refreshToken, clearSession } = get()
         if (refreshToken) {
           // Notifica o backend para invalidar o token
           await api.post('/api/auth/logout', { refreshToken }).catch(() => {})
         }
-        set({
-          user: null,
-          barbershop: null,
-          accessToken: null,
-          refreshToken: null,
-          isAuthenticated: false,
-        })
+        clearSession()
       },
     }),
     {
