@@ -6,7 +6,9 @@ services:
     runtime: node
     plan: free
     rootDir: apps/api
-    buildCommand: npm install && npm run build
+    # --include=dev: NODE_ENV=production faria o npm pular as devDependencies,
+    # mas o build precisa delas (typescript, @types/*, prisma CLI)
+    buildCommand: npm install --include=dev && npm run build
     startCommand: npm run migrate && npm run start
     healthCheckPath: /health
     envVars:
