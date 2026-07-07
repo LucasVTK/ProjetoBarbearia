@@ -1,6 +1,11 @@
 import { useAuthStore } from '../store/authStore'
 
-const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3333'
+// Mesma origem: em produção o proxy do Vercel repassa /api para a API;
+// no dev o proxy do Vite faz o mesmo. Assim o cookie httpOnly do refresh
+// token é first-party em qualquer navegador (inclusive Safari).
+// Em produção a origem própria é obrigatória (senão o cookie SameSite=Lax
+// não trafega) — VITE_API_URL só vale como override no dev.
+const BASE_URL = import.meta.env.PROD ? '' : (import.meta.env.VITE_API_URL ?? '')
 
 interface RequestOptions {
   method?: string
@@ -13,19 +18,20 @@ interface RequestOptions {
 let refreshPromise: Promise<string | null> | null = null
 
 async function refreshAccessToken(): Promise<string | null> {
-  const { refreshToken, setTokens, clearSession } = useAuthStore.getState()
-  if (!refreshToken) return null
+  const { setAccessToken, clearSession } = useAuthStore.getState()
 
   try {
+    // O refresh token vai no cookie httpOnly — nada no body
     const res = await fetch(`${BASE_URL}/api/auth/refresh`, {
       method: 'POST',
+      credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ refreshToken }),
+      body: '{}',
     })
     if (!res.ok) throw new Error('refresh falhou')
 
-    const data = (await res.json()) as { accessToken: string; refreshToken: string }
-    setTokens(data.accessToken, data.refreshToken)
+    const data = (await res.json()) as { accessToken: string }
+    setAccessToken(data.accessToken)
     return data.accessToken
   } catch {
     // Sessão realmente expirou — limpa o estado e o ProtectedRoute
@@ -49,6 +55,7 @@ async function request<T>(path: string, options: RequestOptions = {}, isRetry = 
   const res = await fetch(`${BASE_URL}${path}`, {
     method,
     headers,
+    credentials: 'include', // envia o cookie de sessão nas rotas de auth
     body: body ? JSON.stringify(body) : undefined,
   })
 
@@ -80,3 +87,5 @@ export const api = {
   patch:  <T>(path: string, body: unknown, token?: string) => request<T>(path, { method: 'PATCH', body, token }),
   delete: <T>(path: string, token?: string)              => request<T>(path, { method: 'DELETE', token }),
 }
+
+export { refreshAccessToken }

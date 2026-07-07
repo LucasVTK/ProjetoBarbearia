@@ -13,8 +13,10 @@ export const loginSchema = z.object({
   password: z.string().min(1, 'Senha obrigatória'),
 })
 
+// O refresh token normalmente chega no cookie httpOnly; o body é
+// aceito como fallback para fronts antigos ainda em cache
 export const refreshSchema = z.object({
-  refreshToken: z.string().min(1, 'Refresh token obrigatório'),
+  refreshToken: z.string().min(1).optional(),
 })
 
 export type RegisterInput = z.infer<typeof registerSchema>

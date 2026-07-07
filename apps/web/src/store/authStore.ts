@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { api } from '../services/api'
+import { api, refreshAccessToken } from '../services/api'
 
 interface User {
   id: string
@@ -18,15 +18,18 @@ interface Barbershop {
 interface AuthState {
   user: User | null
   barbershop: Barbershop | null
+  // Só em memória — nunca vai para o localStorage. A sessão durável vive
+  // no cookie httpOnly do refresh token, que o JavaScript não lê.
   accessToken: string | null
-  refreshToken: string | null
   isAuthenticated: boolean
   _hydrated: boolean
+  sessionChecked: boolean
 
   login: (email: string, password: string) => Promise<void>
   register: (data: RegisterData) => Promise<void>
   logout: () => Promise<void>
-  setTokens: (accessToken: string, refreshToken: string) => void
+  bootstrapSession: () => Promise<void>
+  setAccessToken: (accessToken: string) => void
   clearSession: () => void
   setHydrated: () => void
 }
@@ -41,10 +44,12 @@ interface RegisterData {
 
 interface AuthResponse {
   accessToken: string
-  refreshToken: string
   user: User
   barbershop: Barbershop | null
 }
+
+// Evita bootstrap duplicado (StrictMode monta os efeitos duas vezes no dev)
+let bootstrapping: Promise<void> | null = null
 
 export const useAuthStore = create<AuthState>()(
   persist(
@@ -52,14 +57,14 @@ export const useAuthStore = create<AuthState>()(
       user: null,
       barbershop: null,
       accessToken: null,
-      refreshToken: null,
       isAuthenticated: false,
       _hydrated: false,
+      sessionChecked: false,
 
       setHydrated: () => set({ _hydrated: true }),
 
-      setTokens: (accessToken, refreshToken) => {
-        set({ accessToken, refreshToken })
+      setAccessToken: (accessToken) => {
+        set({ accessToken })
       },
 
       clearSession: () => {
@@ -67,9 +72,19 @@ export const useAuthStore = create<AuthState>()(
           user: null,
           barbershop: null,
           accessToken: null,
-          refreshToken: null,
           isAuthenticated: false,
+          sessionChecked: true,
         })
+      },
+
+      // F5 apaga o access token da memória — renova em silêncio com o
+      // cookie antes de renderizar o painel
+      bootstrapSession: async () => {
+        bootstrapping ??= (async () => {
+          await refreshAccessToken() // sucesso seta o token; falha limpa a sessão
+          set({ sessionChecked: true })
+        })().finally(() => { bootstrapping = null })
+        return bootstrapping
       },
 
       login: async (email, password) => {
@@ -78,8 +93,8 @@ export const useAuthStore = create<AuthState>()(
           user: data.user,
           barbershop: data.barbershop,
           accessToken: data.accessToken,
-          refreshToken: data.refreshToken,
           isAuthenticated: true,
+          sessionChecked: true,
         })
       },
 
@@ -89,27 +104,32 @@ export const useAuthStore = create<AuthState>()(
           user: data.user,
           barbershop: data.barbershop,
           accessToken: data.accessToken,
-          refreshToken: data.refreshToken,
           isAuthenticated: true,
+          sessionChecked: true,
         })
       },
 
       logout: async () => {
-        const { refreshToken, clearSession } = get()
-        if (refreshToken) {
-          // Notifica o backend para invalidar o token
-          await api.post('/api/auth/logout', { refreshToken }).catch(() => {})
-        }
-        clearSession()
+        // O cookie identifica a sessão a invalidar no backend
+        await api.post('/api/auth/logout', {}).catch(() => {})
+        get().clearSession()
       },
     }),
     {
       name: 'barberpro-auth',
+      // v1: tokens saíram do localStorage (viviam lá na v0)
+      version: 1,
+      migrate: (persisted) => {
+        const state = persisted as Record<string, unknown> | undefined
+        if (state) {
+          delete state.accessToken
+          delete state.refreshToken
+        }
+        return state as unknown as AuthState
+      },
       partialize: (state) => ({
         user: state.user,
         barbershop: state.barbershop,
-        accessToken: state.accessToken,
-        refreshToken: state.refreshToken,
         isAuthenticated: state.isAuthenticated,
       }),
       onRehydrateStorage: () => (state) => {

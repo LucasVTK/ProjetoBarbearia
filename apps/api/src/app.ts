@@ -1,7 +1,9 @@
 import './config/env'
 import express from 'express'
 import cors from 'cors'
+import cookieParser from 'cookie-parser'
 import helmet from 'helmet'
+import { allowedOrigins } from './config/urls'
 import { router } from './routes'
 import { errorHandler } from './shared/middlewares/errorHandler'
 import { notificationsService } from './modules/notifications/notifications.service'
@@ -9,24 +11,19 @@ import { notificationsService } from './modules/notifications/notifications.serv
 const app = express()
 const PORT = process.env.PORT || 3333
 
-// Necessário atrás de proxy (Railway) para o rate limit enxergar o IP real
+// Necessário atrás de proxy (Render) para o rate limit enxergar o IP real
 app.set('trust proxy', 1)
 
 // Segurança
 app.use(helmet())
 
 // CORS: lista fechada de origens permitidas.
-// FRONTEND_URL aceita várias URLs separadas por vírgula (o Vercel cria
-// mais de um domínio para o mesmo site) e tolera barra no final.
-const allowedOrigins = (process.env.FRONTEND_URL ?? 'http://localhost:5173')
-  .split(',')
-  .map(origin => origin.trim().replace(/\/+$/, ''))
-
 app.use(cors({
   origin: allowedOrigins,
   credentials: true,
 }))
 app.use(express.json())
+app.use(cookieParser()) // refresh token de sessão vive em cookie httpOnly
 
 // Rotas
 app.use('/api', router)

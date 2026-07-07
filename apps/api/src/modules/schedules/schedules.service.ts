@@ -1,5 +1,9 @@
 import { prisma } from '../../config/database'
+import type { Prisma } from '../../generated/prisma/client'
 import type { UpsertScheduleInput } from './schedules.schema'
+
+// Permite rodar a consulta de slots dentro de uma transação (booking)
+type DbClient = Prisma.TransactionClient
 
 export const schedulesService = {
 
@@ -41,11 +45,11 @@ export const schedulesService = {
   },
 
   // Gera slots de tempo disponíveis para uma data específica
-  async getAvailableSlots(barbershopId: string, professionalId: string, date: Date, serviceDuration: number) {
+  async getAvailableSlots(barbershopId: string, professionalId: string, date: Date, serviceDuration: number, db: DbClient = prisma) {
     const dayOfWeek = date.getDay() // 0=Dom, 1=Seg...
 
     // Busca horários de trabalho do profissional nesse dia
-    const daySchedules = await prisma.schedule.findMany({
+    const daySchedules = await db.schedule.findMany({
       where: { barbershopId, professionalId, dayOfWeek, active: true },
       orderBy: { startTime: 'asc' },
     })
@@ -58,7 +62,7 @@ export const schedulesService = {
     const endOfDay = new Date(date)
     endOfDay.setHours(23, 59, 59, 999)
 
-    const existingAppointments = await prisma.appointment.findMany({
+    const existingAppointments = await db.appointment.findMany({
       where: {
         professionalId,
         date: { gte: startOfDay, lte: endOfDay },
@@ -103,6 +107,8 @@ export const schedulesService = {
       }
     }
 
-    return slots
+    // Dados antigos podem ter janelas sobrepostas — nunca devolver
+    // o mesmo horário duas vezes ("HH:MM" ordena certo como string)
+    return [...new Set(slots)].sort()
   },
 }

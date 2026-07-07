@@ -1,3 +1,4 @@
+import { createHash } from 'crypto'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import { prisma } from '../../config/database'
@@ -36,7 +37,13 @@ function generateRefreshToken(userId: string) {
 
 const REFRESH_TOKEN_DAYS = 7
 
-// Gera, persiste e retorna um novo refresh token para o usuário.
+// O banco guarda só o hash do refresh token — se o banco vazar, os
+// registros não servem como sessão. O token cru só existe no cliente.
+function hashToken(token: string) {
+  return createHash('sha256').update(token).digest('hex')
+}
+
+// Gera, persiste (hash) e retorna um novo refresh token para o usuário.
 // Aproveita para limpar tokens já expirados (senão acumulam para sempre).
 async function createRefreshToken(userId: string) {
   const token = generateRefreshToken(userId)
@@ -46,7 +53,7 @@ async function createRefreshToken(userId: string) {
   await prisma.refreshToken.deleteMany({
     where: { userId, expiresAt: { lt: new Date() } },
   })
-  await prisma.refreshToken.create({ data: { token, userId, expiresAt } })
+  await prisma.refreshToken.create({ data: { token: hashToken(token), userId, expiresAt } })
 
   return token
 }
@@ -157,7 +164,9 @@ export const authService = {
     }
 
     // 2. Verifica se o token existe no banco e não expirou
-    const stored = await prisma.refreshToken.findUnique({ where: { token } })
+    const stored = await prisma.refreshToken.findUnique({
+      where: { token: hashToken(token) },
+    })
     if (!stored || stored.expiresAt < new Date()) {
       throw new AppError('Sessão expirada. Faça login novamente.', 401)
     }
@@ -166,8 +175,14 @@ export const authService = {
     const user = await prisma.user.findUnique({ where: { id: payload.sub } })
     if (!user || !user.active) throw new AppError('Usuário não encontrado', 401)
 
-    // 4. Rotaciona o refresh token (invalida o antigo, gera um novo)
-    await prisma.refreshToken.delete({ where: { token } })
+    // 4. Rotaciona o refresh token com 30s de graça: o cookie é
+    // compartilhado entre abas — se duas renovarem ao mesmo tempo, a
+    // segunda ainda entra com o token antigo em vez de derrubar a sessão.
+    // O token expirado some na limpeza do createRefreshToken.
+    await prisma.refreshToken.update({
+      where: { token: hashToken(token) },
+      data: { expiresAt: new Date(Date.now() + 30_000) },
+    })
     const newRefreshToken = await createRefreshToken(user.id)
 
     return {
@@ -179,6 +194,6 @@ export const authService = {
   // ── LOGOUT ────────────────────────────────────────────────
   async logout(token: string) {
     // Remove o refresh token do banco — sessão encerrada
-    await prisma.refreshToken.deleteMany({ where: { token } })
+    await prisma.refreshToken.deleteMany({ where: { token: hashToken(token) } })
   },
 }
