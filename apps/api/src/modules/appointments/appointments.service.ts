@@ -90,8 +90,9 @@ export const appointmentsService = {
       // 10:30) passariam ambos se a checagem ficasse fora da transação.
       const appointment = await prisma.$transaction(async (tx) => {
         // Lock morre sozinho no fim da transação; hashtext converte o
-        // uuid em chave numérica do advisory lock
-        await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtext(${input.professionalId}))`
+        // uuid em chave numérica. O cast para text é obrigatório: a função
+        // retorna void, que o driver pg do Prisma não desserializa
+        await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtext(${input.professionalId}))::text`
 
         // Só aceita horários que o sistema realmente oferece: dentro da
         // jornada do profissional, sem conflito e não no passado
