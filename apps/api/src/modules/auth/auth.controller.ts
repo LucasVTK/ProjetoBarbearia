@@ -34,11 +34,11 @@ export const authController = {
   async register(req: Request, res: Response, next: NextFunction) {
     try {
       const input = registerSchema.parse(req.body)
-      const result = await authService.register(input)
-      setRefreshCookie(res, result.refreshToken)
-      // refreshToken também vai no body durante a transição — fronts
-      // antigos em cache dependem dele; remover depois
-      res.status(201).json(result)
+      // O refresh token vai SÓ no cookie httpOnly — fora do body, um XSS
+      // não consegue capturá-lo nem na resposta do login
+      const { refreshToken, ...body } = await authService.register(input)
+      setRefreshCookie(res, refreshToken)
+      res.status(201).json(body)
     } catch (err) {
       next(err)
     }
@@ -47,9 +47,9 @@ export const authController = {
   async login(req: Request, res: Response, next: NextFunction) {
     try {
       const input = loginSchema.parse(req.body)
-      const result = await authService.login(input)
-      setRefreshCookie(res, result.refreshToken)
-      res.json(result)
+      const { refreshToken, ...body } = await authService.login(input)
+      setRefreshCookie(res, refreshToken)
+      res.json(body)
     } catch (err) {
       next(err)
     }
@@ -57,9 +57,9 @@ export const authController = {
 
   async refresh(req: Request, res: Response, next: NextFunction) {
     try {
-      const result = await authService.refresh(getRefreshToken(req))
-      setRefreshCookie(res, result.refreshToken)
-      res.json(result)
+      const { refreshToken, ...body } = await authService.refresh(getRefreshToken(req))
+      setRefreshCookie(res, refreshToken)
+      res.json(body)
     } catch (err) {
       next(err)
     }

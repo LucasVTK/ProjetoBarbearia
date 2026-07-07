@@ -181,11 +181,16 @@ export const authService = {
     // 4. Rotaciona o refresh token com 30s de graça: o cookie é
     // compartilhado entre abas — se duas renovarem ao mesmo tempo, a
     // segunda ainda entra com o token antigo em vez de derrubar a sessão.
+    // A graça NUNCA se estende (só encurta o prazo): senão reusos a cada
+    // <30s manteriam um token roubado vivo indefinidamente.
     // O token expirado some na limpeza do createRefreshToken.
-    await prisma.refreshToken.update({
-      where: { token: hashToken(token) },
-      data: { expiresAt: new Date(Date.now() + 30_000) },
-    })
+    const graceEnd = new Date(Date.now() + 30_000)
+    if (stored.expiresAt > graceEnd) {
+      await prisma.refreshToken.update({
+        where: { token: hashToken(token) },
+        data: { expiresAt: graceEnd },
+      })
+    }
     const newRefreshToken = await createRefreshToken(user.id)
 
     return {
