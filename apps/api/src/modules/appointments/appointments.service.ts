@@ -202,10 +202,17 @@ export const appointmentsService = {
   },
 
   // Busca um agendamento pelo token (para a tela de cancelamento do cliente)
+  // Rota pública: select fechado — sem notes, cancelReason, ids internos
+  // nem o próprio cancelToken
   async getByToken(token: string) {
     const appointment = await prisma.appointment.findUnique({
       where: { cancelToken: token },
-      include: {
+      select: {
+        id:      true,
+        date:    true,
+        endTime: true,
+        status:  true,
+        price:   true,
         client:       { select: { name: true } },
         service:      { select: { name: true, duration: true } },
         professional: { select: { name: true } },
