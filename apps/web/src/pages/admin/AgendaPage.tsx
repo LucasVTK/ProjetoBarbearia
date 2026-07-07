@@ -131,8 +131,10 @@ export function AgendaPage() {
       )
       setAppointments(prev => prev.map(a => a.id === id ? { ...a, status: updated.status } : a))
       setSelected(prev => prev?.id === id ? { ...prev, status: updated.status } : prev)
-    } catch {
-      setError('Erro ao atualizar status')
+    } catch (err) {
+      // A API explica por que a transição foi recusada
+      setError(err instanceof Error ? err.message : 'Erro ao atualizar status')
+      setSelected(null) // fecha o modal para o aviso ficar visível
     } finally {
       setUpdating(false)
     }
@@ -287,6 +289,12 @@ export function AgendaPage() {
                 </span>
               </div>
 
+              {/* Cancelado é definitivo — a API recusa qualquer alteração */}
+              {selected.status === 'CANCELLED' ? (
+                <p className="text-xs text-zinc-600 italic pt-2">
+                  Agendamento cancelado não pode ser alterado. Peça ao cliente para agendar novamente.
+                </p>
+              ) : (
               <div className="pt-2 space-y-2">
                 <div className="flex items-center justify-between">
                   <p className="text-xs text-zinc-500">Alterar status</p>
@@ -323,6 +331,7 @@ export function AgendaPage() {
                   </div>
                 )}
               </div>
+              )}
             </div>
           </div>
         </div>

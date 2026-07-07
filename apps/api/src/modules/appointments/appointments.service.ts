@@ -127,14 +127,24 @@ export const appointmentsService = {
     }
   },
 
-  // Atualiza status (painel do barbeiro)
+  // Atualiza status (painel do barbeiro).
+  // Máquina permissiva: correções de engano são permitidas, exceto
+  // reabrir um CANCELLED — o cliente já foi avisado do cancelamento e
+  // o horário pode ter sido reocupado por outro agendamento.
   async updateStatus(id: string, barbershopId: string, input: UpdateStatusInput) {
     const appointment = await prisma.appointment.findFirst({
       where: { id, barbershopId },
     })
     if (!appointment) throw new AppError('Agendamento não encontrado', 404)
 
-    // Se marcou como no-show, incrementa o contador do cliente
+    if (appointment.status === 'CANCELLED') {
+      throw new AppError(
+        'Um agendamento cancelado não pode ser alterado. Peça ao cliente para agendar novamente.',
+        400
+      )
+    }
+
+    // Contador de no-show acompanha a transição nos dois sentidos
     // (só na transição — evita contar duas vezes o mesmo agendamento)
     if (input.status === 'NO_SHOW' && appointment.status !== 'NO_SHOW') {
       await prisma.client.update({
@@ -142,13 +152,20 @@ export const appointmentsService = {
         data: { noShowCount: { increment: 1 } },
       })
     }
+    if (appointment.status === 'NO_SHOW' && input.status !== 'NO_SHOW') {
+      await prisma.client.updateMany({
+        where: { id: appointment.clientId, noShowCount: { gt: 0 } },
+        data: { noShowCount: { decrement: 1 } },
+      })
+    }
 
+    const isEnding = ['CANCELLED', 'NO_SHOW'].includes(input.status)
     const updated = await prisma.appointment.update({
       where: { id },
       data: {
         status:       input.status,
-        cancelReason: input.cancelReason,
-        cancelledAt:  ['CANCELLED', 'NO_SHOW'].includes(input.status) ? new Date() : null,
+        cancelReason: isEnding ? input.cancelReason : null,
+        cancelledAt:  isEnding ? new Date() : null,
       },
     })
 
