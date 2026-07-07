@@ -63,26 +63,6 @@ export const appointmentsService = {
     const endTime = new Date(appointmentDate)
     endTime.setMinutes(endTime.getMinutes() + Number(service.duration))
 
-    // Busca ou cria o cliente pelo telefone.
-    // Se o telefone JÁ existe, o nome cadastrado é mantido — senão qualquer
-    // pessoa que digitasse o número de outro cliente renomearia o cadastro
-    // dele (histórico, notas e no-shows iriam junto). Correção de nome só
-    // pelo painel do barbeiro.
-    const client = await prisma.client.upsert({
-      where: {
-        phone_barbershopId: {
-          phone: input.clientPhone,
-          barbershopId,
-        },
-      },
-      create: {
-        name: input.clientName,
-        phone: input.clientPhone,
-        barbershopId,
-      },
-      update: {},
-    })
-
     try {
       // Checagem de disponibilidade e insert na MESMA transação, com lock
       // por profissional: o unique(professionalId, date) só barra colisão
@@ -106,6 +86,27 @@ export const appointmentsService = {
         if (!availableSlots.includes(requestedSlot)) {
           throw new AppError('Horário não disponível', 409)
         }
+
+        // Busca ou cria o cliente pelo telefone — DEPOIS de validar o slot,
+        // senão booking recusado deixaria um cliente órfão no cadastro.
+        // Se o telefone JÁ existe, o nome cadastrado é mantido — senão
+        // qualquer pessoa que digitasse o número de outro cliente renomearia
+        // o cadastro dele (histórico, notas e no-shows iriam junto).
+        // Correção de nome só pelo painel do barbeiro.
+        const client = await tx.client.upsert({
+          where: {
+            phone_barbershopId: {
+              phone: input.clientPhone,
+              barbershopId,
+            },
+          },
+          create: {
+            name: input.clientName,
+            phone: input.clientPhone,
+            barbershopId,
+          },
+          update: {},
+        })
 
         // Rota pública: a resposta devolve só o necessário para a tela de
         // sucesso. Ecoar o client do banco revelaria o nome já cadastrado
