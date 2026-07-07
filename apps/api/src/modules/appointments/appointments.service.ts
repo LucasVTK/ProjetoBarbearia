@@ -56,21 +56,9 @@ export const appointmentsService = {
       throw new AppError('Não é possível agendar em uma data que já passou', 400)
     }
 
-    // Só aceita horários que o sistema realmente oferece: dentro da jornada
-    // do profissional, sem conflito com outros agendamentos e não no passado
     const requestedSlot =
       `${String(appointmentDate.getHours()).padStart(2, '0')}:` +
       `${String(appointmentDate.getMinutes()).padStart(2, '0')}`
-
-    const availableSlots = await schedulesService.getAvailableSlots(
-      barbershopId,
-      input.professionalId,
-      appointmentDate,
-      Number(service.duration)
-    )
-    if (!availableSlots.includes(requestedSlot)) {
-      throw new AppError('Horário não disponível', 409)
-    }
 
     const endTime = new Date(appointmentDate)
     endTime.setMinutes(endTime.getMinutes() + Number(service.duration))
@@ -96,30 +84,53 @@ export const appointmentsService = {
     })
 
     try {
-      // Rota pública: a resposta devolve só o necessário para a tela de
-      // sucesso. Ecoar o client do banco revelaria o nome já cadastrado
-      // para qualquer telefone digitado.
-      const appointment = await prisma.appointment.create({
-        data: {
+      // Checagem de disponibilidade e insert na MESMA transação, com lock
+      // por profissional: o unique(professionalId, date) só barra colisão
+      // de início idêntico — dois bookings sobrepostos (10:00/60min e
+      // 10:30) passariam ambos se a checagem ficasse fora da transação.
+      const appointment = await prisma.$transaction(async (tx) => {
+        // Lock morre sozinho no fim da transação; hashtext converte o
+        // uuid em chave numérica do advisory lock
+        await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtext(${input.professionalId}))`
+
+        // Só aceita horários que o sistema realmente oferece: dentro da
+        // jornada do profissional, sem conflito e não no passado
+        const availableSlots = await schedulesService.getAvailableSlots(
           barbershopId,
-          professionalId: input.professionalId,
-          clientId:       client.id,
-          serviceId:      input.serviceId,
-          date:           appointmentDate,
-          endTime,
-          price:          service.price,
-          cancelToken:    generateCancelToken(),
-        },
-        select: { id: true, date: true, cancelToken: true },
-      })
+          input.professionalId,
+          appointmentDate,
+          Number(service.duration),
+          tx
+        )
+        if (!availableSlots.includes(requestedSlot)) {
+          throw new AppError('Horário não disponível', 409)
+        }
+
+        // Rota pública: a resposta devolve só o necessário para a tela de
+        // sucesso. Ecoar o client do banco revelaria o nome já cadastrado
+        // para qualquer telefone digitado.
+        return tx.appointment.create({
+          data: {
+            barbershopId,
+            professionalId: input.professionalId,
+            clientId:       client.id,
+            serviceId:      input.serviceId,
+            date:           appointmentDate,
+            endTime,
+            price:          service.price,
+            cancelToken:    generateCancelToken(),
+          },
+          select: { id: true, date: true, cancelToken: true },
+        })
+      }, { timeout: 15_000 }) // folga para latência do banco (Neon free)
 
       // Avisa o barbeiro (sino do painel + WhatsApp)
       fireAndForget(notificationsService.notifyNewAppointment(appointment.id))
 
       return appointment
     } catch (err) {
-      // Race condition: dois clientes confirmando o mesmo horário ao mesmo
-      // tempo — o unique(professionalId, date) do banco barra o segundo
+      // Defesa em profundidade: o unique(professionalId, date) ainda barra
+      // colisão exata caso algo escape do lock
       if ((err as { code?: string }).code === 'P2002') {
         throw new AppError('Horário não disponível', 409)
       }
