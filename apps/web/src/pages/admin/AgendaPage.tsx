@@ -67,6 +67,9 @@ export function AgendaPage() {
   const [selectedDate, setSelectedDate]   = useState(() => parseDateParam(searchParams.get('date')) ?? new Date())
   const [appointments, setAppointments]   = useState<Appointment[]>([])
   const [selected, setSelected]           = useState<Appointment | null>(null)
+  // Cancelar é definitivo (cliente é avisado no WhatsApp e não dá para
+  // reabrir) — exige confirmação explícita antes de aplicar
+  const [confirmCancel, setConfirmCancel] = useState<Appointment | null>(null)
   const [highlightId, setHighlightId]     = useState<string | null>(() => searchParams.get('highlight'))
   const [loading, setLoading]             = useState(true)
   const [updating, setUpdating]           = useState(false)
@@ -317,7 +320,9 @@ export function AgendaPage() {
                         key={opt.status}
                         color={opt.color}
                         disabled={updating}
-                        onClick={() => changeStatus(selected.id, opt.status)}
+                        onClick={() => opt.status === 'CANCELLED'
+                          ? setConfirmCancel(selected)
+                          : changeStatus(selected.id, opt.status)}
                       >
                         {opt.label}
                       </ActionBtn>
@@ -332,6 +337,51 @@ export function AgendaPage() {
                 )}
               </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirmação de cancelamento — ação definitiva */}
+      {confirmCancel && (
+        <div className="fixed inset-0 bg-black/70 z-[60] flex items-end sm:items-center justify-center p-4">
+          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-sm">
+            <div className="px-5 py-5">
+              <div className="w-12 h-12 bg-red-500/10 rounded-full flex items-center justify-center mb-4">
+                <XCircle className="w-6 h-6 text-red-400" />
+              </div>
+              <h3 className="text-base font-bold text-white mb-1">
+                Deseja realmente cancelar o agendamento deste cliente?
+              </h3>
+              <p className="text-sm text-zinc-400">
+                <strong className="text-white">{confirmCancel.client.name}</strong> — {confirmCancel.service.name},{' '}
+                {formatTime(confirmCancel.date)}
+              </p>
+              <p className="text-xs text-zinc-600 mt-3 leading-relaxed">
+                Esta ação não pode ser desfeita: o cliente será avisado pelo WhatsApp
+                e o agendamento não poderá ser reaberto.
+              </p>
+            </div>
+            <div className="flex gap-2 px-5 pb-5">
+              <button
+                onClick={() => setConfirmCancel(null)}
+                disabled={updating}
+                className="flex-1 py-2.5 border border-zinc-700 text-zinc-300 rounded-xl text-sm font-medium hover:border-zinc-600 transition-colors disabled:opacity-50"
+              >
+                Voltar
+              </button>
+              <button
+                onClick={async () => {
+                  await changeStatus(confirmCancel.id, 'CANCELLED')
+                  setConfirmCancel(null)
+                }}
+                disabled={updating}
+                className="flex-1 py-2.5 bg-red-600 hover:bg-red-700 disabled:opacity-60 text-white rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2"
+              >
+                {updating
+                  ? <><Loader2 className="w-4 h-4 animate-spin" /> Cancelando...</>
+                  : 'Sim, cancelar'}
+              </button>
             </div>
           </div>
         </div>
