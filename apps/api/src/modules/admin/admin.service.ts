@@ -1,4 +1,3 @@
-import bcrypt from 'bcryptjs'
 import { prisma } from '../../config/database'
 import { AppError } from '../../shared/errors/AppError'
 import type { ListQuery } from './admin.schema'
@@ -12,7 +11,7 @@ interface AdminContext {
   ip: string
 }
 
-function audit(ctx: AdminContext, action: 'SUSPEND' | 'REACTIVATE' | 'DELETE' | 'VIEW', targetBarbershopId: string | null, detail?: string) {
+function audit(ctx: AdminContext, action: 'SUSPEND' | 'REACTIVATE' | 'VIEW', targetBarbershopId: string | null, detail?: string) {
   return prisma.adminAuditLog.create({
     data: {
       adminUserId: ctx.adminUserId,
@@ -161,45 +160,6 @@ export const adminService = {
     ])
 
     return { id: shop.id, active: true }
-  },
-
-  // ── Exclusão definitiva — dupla confirmação ───────────────
-  async deleteBarbershop(id: string, confirmName: string, password: string, ctx: AdminContext) {
-    // Re-autenticação: a senha do ADMIN de novo — um token roubado não basta
-    const admin = await prisma.user.findUnique({ where: { id: ctx.adminUserId } })
-    if (!admin) throw new AppError('Acesso negado', 403)
-    const passwordMatch = await bcrypt.compare(password, admin.passwordHash)
-    if (!passwordMatch) throw new AppError('Senha incorreta', 401)
-
-    const shop = await prisma.barbershop.findUnique({
-      where: { id },
-      include: {
-        owner: { select: { id: true, platformAdmin: true } },
-        _count: { select: { clients: true, appointments: true } },
-      },
-    })
-    if (!shop) throw new AppError('Barbearia não encontrada', 404)
-    if (shop.owner.platformAdmin) {
-      throw new AppError('A barbearia do dono da plataforma não pode ser excluída', 400)
-    }
-    if (confirmName.trim() !== shop.name) {
-      throw new AppError('O nome digitado não confere com o nome da barbearia', 400)
-    }
-
-    await prisma.$transaction([
-      prisma.notification.deleteMany({ where: { barbershopId: id } }),
-      prisma.appointment.deleteMany({ where: { barbershopId: id } }),
-      prisma.client.deleteMany({ where: { barbershopId: id } }),
-      prisma.schedule.deleteMany({ where: { barbershopId: id } }),
-      prisma.service.deleteMany({ where: { barbershopId: id } }),
-      prisma.professional.deleteMany({ where: { barbershopId: id } }),
-      prisma.barbershop.delete({ where: { id } }),
-      prisma.user.delete({ where: { id: shop.owner.id } }), // refresh tokens caem em cascata
-      audit(ctx, 'DELETE', id,
-        `${shop.name} — ${shop._count.clients} clientes, ${shop._count.appointments} agendamentos`),
-    ])
-
-    return { deleted: true }
   },
 
   // ── Auditoria ─────────────────────────────────────────────

@@ -1,13 +1,14 @@
 -- CreateEnum
-CREATE TYPE "AdminAction" AS ENUM ('SUSPEND', 'REACTIVATE', 'DELETE', 'VIEW', 'DENIED');
+CREATE TYPE "AdminAction" AS ENUM ('SUSPEND', 'REACTIVATE', 'VIEW', 'DENIED');
 
 -- AlterTable
 ALTER TABLE "users" ADD COLUMN     "platformAdmin" BOOLEAN NOT NULL DEFAULT false;
 
--- CreateTable
+-- CreateTable (sem foreign keys: auditoria sobrevive a exclusoes)
 CREATE TABLE "admin_audit_logs" (
     "id" TEXT NOT NULL,
     "adminUserId" TEXT NOT NULL,
+    "adminName" TEXT NOT NULL,
     "action" "AdminAction" NOT NULL,
     "targetBarbershopId" TEXT,
     "detail" TEXT,
@@ -16,6 +17,3 @@ CREATE TABLE "admin_audit_logs" (
 
     CONSTRAINT "admin_audit_logs_pkey" PRIMARY KEY ("id")
 );
-
--- AddForeignKey
-ALTER TABLE "admin_audit_logs" ADD CONSTRAINT "admin_audit_logs_adminUserId_fkey" FOREIGN KEY ("adminUserId") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

@@ -15,5 +15,6 @@ adminRouter.get('/barbershops',                 adminController.listBarbershops)
 adminRouter.get('/barbershops/:id',             adminController.getBarbershop)
 adminRouter.patch('/barbershops/:id/suspend',   adminController.suspend)
 adminRouter.patch('/barbershops/:id/reactivate', adminController.reactivate)
-adminRouter.delete('/barbershops/:id',          adminController.deleteBarbershop)
+// Exclusão definitiva não existe de propósito: suspensão (reversível,
+// preserva histórico) é o único caminho administrativo
 adminRouter.get('/audit',                       adminController.listAudit)

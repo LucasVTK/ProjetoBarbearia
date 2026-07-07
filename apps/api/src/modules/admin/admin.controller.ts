@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express'
 import { adminService } from './admin.service'
-import { suspendSchema, deleteBarbershopSchema, listQuerySchema } from './admin.schema'
+import { suspendSchema, listQuerySchema } from './admin.schema'
 import { prisma } from '../../config/database'
 import { getClientIp } from '../../shared/helpers/getClientIp'
 
@@ -48,14 +48,6 @@ export const adminController = {
     try {
       const ctx = await adminContext(req)
       res.json(await adminService.reactivate(req.params.id, ctx))
-    } catch (err) { next(err) }
-  },
-
-  async deleteBarbershop(req: Request, res: Response, next: NextFunction) {
-    try {
-      const { confirmName, password } = deleteBarbershopSchema.parse(req.body)
-      const ctx = await adminContext(req)
-      res.json(await adminService.deleteBarbershop(req.params.id, confirmName, password, ctx))
     } catch (err) { next(err) }
   },
 

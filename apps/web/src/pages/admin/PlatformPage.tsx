@@ -1,8 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import {
-  Shield, Search, Loader2, Eye, XCircle, AlertTriangle,
-  RotateCcw, Trash2, CheckCircle,
-} from 'lucide-react'
+import { Shield, Search, Loader2, Eye, XCircle, RotateCcw } from 'lucide-react'
 import { api } from '../../services/api'
 import { useAuthStore } from '../../store/authStore'
 
@@ -44,7 +41,7 @@ interface ShopDetail {
 interface AuditLog {
   id: string
   adminName: string
-  action: 'SUSPEND' | 'REACTIVATE' | 'DELETE' | 'VIEW' | 'DENIED'
+  action: 'SUSPEND' | 'REACTIVATE' | 'VIEW' | 'DENIED'
   detail: string | null
   ip: string | null
   createdAt: string
@@ -83,7 +80,6 @@ function shopChip(s: Shop): { kind: ChipKind; label: string; cls: string } {
 const auditConfig: Record<AuditLog['action'], { label: string; dot: string }> = {
   SUSPEND:    { label: 'Suspendeu',        dot: 'bg-red-400' },
   REACTIVATE: { label: 'Reativou',         dot: 'bg-green-400' },
-  DELETE:     { label: 'Excluiu',          dot: 'bg-red-500' },
   VIEW:       { label: 'Visualizou',       dot: 'bg-blue-400' },
   DENIED:     { label: 'Tentativa negada', dot: 'bg-orange-400' },
 }
@@ -106,9 +102,6 @@ export function PlatformPage() {
   const [loadingDetail, setLoadingDetail] = useState(false)
   const [suspendTarget, setSuspendTarget] = useState<Shop | null>(null)
   const [suspendReason, setSuspendReason] = useState('')
-  const [deleteTarget, setDeleteTarget]   = useState<ShopDetail | null>(null)
-  const [deleteName, setDeleteName]       = useState('')
-  const [deletePassword, setDeletePassword] = useState('')
   const [working, setWorking]             = useState(false)
 
   const fetchAll = useCallback(async () => {
@@ -182,25 +175,6 @@ export function PlatformPage() {
       await fetchAll()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao reativar')
-    } finally {
-      setWorking(false)
-    }
-  }
-
-  async function confirmDelete() {
-    if (!deleteTarget) return
-    setWorking(true)
-    setError('')
-    try {
-      await api.delete(`/api/admin/barbershops/${deleteTarget.id}`, token,
-        { confirmName: deleteName, password: deletePassword })
-      setDeleteTarget(null)
-      setDetail(null)
-      setDeleteName('')
-      setDeletePassword('')
-      await fetchAll()
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao excluir')
     } finally {
       setWorking(false)
     }
@@ -417,10 +391,6 @@ export function PlatformPage() {
                     Reativar conta
                   </button>
                 )}
-                <button onClick={() => { setDeleteTarget(detail); setDetail(null) }}
-                  className="flex items-center justify-center gap-1.5 px-4 py-2.5 border border-red-500/25 text-red-400 hover:bg-red-500/10 rounded-xl text-sm font-medium transition-colors">
-                  <Trash2 className="w-4 h-4" /> Excluir
-                </button>
               </div>
             )}
           </div>
@@ -460,49 +430,6 @@ export function PlatformPage() {
         </div>
       )}
 
-      {/* Modal: excluir definitivamente */}
-      {deleteTarget && (
-        <div className="fixed inset-0 bg-black/70 z-[60] flex items-end sm:items-center justify-center p-4">
-          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-sm">
-            <div className="px-5 py-5">
-              <div className="w-12 h-12 bg-red-500/10 rounded-full flex items-center justify-center mb-4">
-                <AlertTriangle className="w-6 h-6 text-red-400" />
-              </div>
-              <h3 className="text-base font-bold text-white mb-1">Excluir "{deleteTarget.name}" definitivamente?</h3>
-              <p className="text-sm text-zinc-400 mb-4">
-                Apaga a conta do dono, {deleteTarget._count.clients} clientes e{' '}
-                {deleteTarget._count.appointments} agendamentos.{' '}
-                <strong className="text-red-400">Não pode ser desfeito.</strong>
-              </p>
-              <label className="block text-xs text-zinc-500 mb-1.5">
-                Digite o nome exato: <strong className="text-zinc-300">{deleteTarget.name}</strong>
-              </label>
-              <input
-                type="text" value={deleteName} onChange={e => setDeleteName(e.target.value)}
-                placeholder={deleteTarget.name}
-                className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-brand-500 mb-3"
-              />
-              <label className="block text-xs text-zinc-500 mb-1.5">Sua senha de administrador</label>
-              <input
-                type="password" value={deletePassword} onChange={e => setDeletePassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-brand-500"
-              />
-            </div>
-            <div className="flex gap-2 px-5 pb-5">
-              <button onClick={() => { setDeleteTarget(null); setDeleteName(''); setDeletePassword('') }} disabled={working}
-                className="flex-1 py-2.5 border border-zinc-700 text-zinc-300 rounded-xl text-sm font-medium hover:border-zinc-600 transition-colors disabled:opacity-50">
-                Voltar
-              </button>
-              <button onClick={confirmDelete}
-                disabled={working || deleteName.trim() !== deleteTarget.name || !deletePassword}
-                className="flex-1 py-2.5 bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2">
-                {working ? <><Loader2 className="w-4 h-4 animate-spin" /> Excluindo…</> : <><CheckCircle className="w-4 h-4" /> Excluir tudo</>}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }
