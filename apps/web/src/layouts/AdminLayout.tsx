@@ -4,7 +4,7 @@ import { useAuthStore } from '../store/authStore'
 import { api } from '../services/api'
 import {
   Scissors, LayoutDashboard, Calendar, Users,
-  Briefcase, TrendingUp, Settings, LogOut, Menu, Bell, BellOff,
+  Briefcase, TrendingUp, Settings, LogOut, Menu, Bell, BellOff, Shield,
 } from 'lucide-react'
 
 interface Notification {
@@ -159,6 +159,29 @@ export function AdminLayout() {
               {label}
             </NavLink>
           ))}
+
+          {/* Só o dono da plataforma vê — e o backend valida de verdade */}
+          {user?.platformAdmin && (
+            <>
+              <p className="px-3 pt-4 pb-1 text-[10px] font-semibold uppercase tracking-widest text-zinc-600">
+                Dono da plataforma
+              </p>
+              <NavLink
+                to="/admin/plataforma"
+                onClick={() => setSidebarOpen(false)}
+                className={({ isActive }) =>
+                  `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                    isActive
+                      ? 'bg-brand-500/10 text-brand-400'
+                      : 'text-zinc-400 hover:text-white hover:bg-zinc-800'
+                  }`
+                }
+              >
+                <Shield className="w-4 h-4 flex-shrink-0" />
+                Plataforma
+              </NavLink>
+            </>
+          )}
         </nav>
 
         {/* Usuário + Logout */}

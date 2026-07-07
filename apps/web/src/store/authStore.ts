@@ -7,6 +7,8 @@ interface User {
   name: string
   email: string
   role: string
+  // Mostra a aba Plataforma — a autorização real é do backend
+  platformAdmin?: boolean
 }
 
 interface Barbershop {

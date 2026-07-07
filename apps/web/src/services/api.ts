@@ -85,7 +85,7 @@ export const api = {
   post:   <T>(path: string, body: unknown, token?: string) => request<T>(path, { method: 'POST', body, token }),
   put:    <T>(path: string, body: unknown, token?: string) => request<T>(path, { method: 'PUT', body, token }),
   patch:  <T>(path: string, body: unknown, token?: string) => request<T>(path, { method: 'PATCH', body, token }),
-  delete: <T>(path: string, token?: string)              => request<T>(path, { method: 'DELETE', token }),
+  delete: <T>(path: string, token?: string, body?: unknown) => request<T>(path, { method: 'DELETE', token, body }),
 }
 
 export { refreshAccessToken }
