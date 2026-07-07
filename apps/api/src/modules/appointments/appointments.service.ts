@@ -96,6 +96,9 @@ export const appointmentsService = {
     })
 
     try {
+      // Rota pública: a resposta devolve só o necessário para a tela de
+      // sucesso. Ecoar o client do banco revelaria o nome já cadastrado
+      // para qualquer telefone digitado.
       const appointment = await prisma.appointment.create({
         data: {
           barbershopId,
@@ -107,10 +110,7 @@ export const appointmentsService = {
           price:          service.price,
           cancelToken:    generateCancelToken(),
         },
-        include: {
-          client:  { select: { name: true, phone: true } },
-          service: { select: { name: true } },
-        },
+        select: { id: true, date: true, cancelToken: true },
       })
 
       // Avisa o barbeiro (sino do painel + WhatsApp)
