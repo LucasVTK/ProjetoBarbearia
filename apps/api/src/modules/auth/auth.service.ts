@@ -1,4 +1,4 @@
-import { createHash } from 'crypto'
+import { createHash, randomUUID } from 'crypto'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import { prisma } from '../../config/database'
@@ -28,8 +28,11 @@ function generateAccessToken(userId: string, role: string) {
 }
 
 function generateRefreshToken(userId: string) {
+  // jti aleatório: sem ele, dois tokens do mesmo usuário emitidos no
+  // mesmo segundo (iat/exp iguais) seriam idênticos e colidiriam no
+  // unique da tabela — o rotate com janela de graça mantém o antigo lá
   return jwt.sign(
-    { sub: userId },
+    { sub: userId, jti: randomUUID() },
     process.env.REFRESH_TOKEN_SECRET!,
     { expiresIn: (process.env.REFRESH_TOKEN_EXPIRES_IN ?? '7d') as ExpiresIn }
   )
