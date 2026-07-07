@@ -10,6 +10,10 @@ export function RegisterPage() {
   const [form, setForm] = useState({
     ownerName: '', barbershopName: '', email: '', phone: '', password: '',
   })
+  // Só validação de digitação — não é enviada à API
+  const [confirmPassword, setConfirmPassword] = useState('')
+
+  const passwordsMismatch = confirmPassword.length > 0 && form.password !== confirmPassword
 
   const register = useAuthStore(s => s.register)
   const navigate = useNavigate()
@@ -21,6 +25,10 @@ export function RegisterPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    if (form.password !== confirmPassword) {
+      setError('As senhas não coincidem')
+      return
+    }
     setLoading(true)
     setError('')
     try {
@@ -96,7 +104,23 @@ export function RegisterPage() {
               </div>
             </div>
 
-            <button type="submit" disabled={loading}
+            <div>
+              <label className="block text-sm font-medium text-zinc-300 mb-1.5">Confirmar senha</label>
+              <input
+                type={showPassword ? 'text' : 'password'} name="confirmPassword"
+                value={confirmPassword}
+                onChange={e => { setConfirmPassword(e.target.value); setError('') }}
+                placeholder="Repita a senha" required minLength={8}
+                className={`w-full bg-zinc-800 border rounded-lg px-4 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none transition-colors ${
+                  passwordsMismatch ? 'border-red-500/60 focus:border-red-500' : 'border-zinc-700 focus:border-brand-500'
+                }`}
+              />
+              {passwordsMismatch && (
+                <p className="text-xs text-red-400 mt-1.5">As senhas não coincidem</p>
+              )}
+            </div>
+
+            <button type="submit" disabled={loading || passwordsMismatch}
               className="w-full flex items-center justify-center gap-2 bg-brand-500 hover:bg-brand-600 disabled:opacity-60 disabled:cursor-not-allowed text-white py-2.5 rounded-lg font-semibold text-sm transition-colors mt-2">
               {loading ? <><Loader2 className="w-4 h-4 animate-spin" />Criando conta...</> : 'Criar conta grátis'}
             </button>
