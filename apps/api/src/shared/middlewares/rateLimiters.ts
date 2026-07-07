@@ -1,14 +1,11 @@
 import { Request } from 'express'
 import rateLimit, { ipKeyGenerator } from 'express-rate-limit'
+import { getClientIp } from '../helpers/getClientIp'
 
 // Atrás do proxy do Vercel, req.ip é o IP do proxy — todos os usuários
-// dividiriam o mesmo balde. O Vercel envia o IP real do visitante em
-// x-vercel-forwarded-for (e sobrescreve qualquer valor vindo de fora).
-// Acesso direto à API (sem proxy) cai no req.ip normal.
+// dividiriam o mesmo balde. getClientIp resolve o IP real do visitante.
 function clientIpKey(req: Request): string {
-  const header = req.headers['x-vercel-forwarded-for']
-  const ip = (Array.isArray(header) ? header[0] : header)?.split(',')[0]?.trim()
-  return ipKeyGenerator(ip || req.ip || '')
+  return ipKeyGenerator(getClientIp(req))
 }
 
 // Protege login/registro contra força bruta (por IP)
@@ -25,6 +22,16 @@ export const authLimiter = rateLimit({
 export const refreshLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: clientIpKey,
+  message: { error: 'Muitas requisições. Aguarde alguns minutos.' },
+})
+
+// Área do dono da plataforma — mais estrito que as rotas comuns
+export const adminLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 120,
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator: clientIpKey,

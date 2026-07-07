@@ -9,6 +9,7 @@ import { dashboardRouter }     from './modules/dashboard/dashboard.routes'
 import { financeRouter }       from './modules/finance/finance.routes'
 import { barbershopRouter }    from './modules/barbershop/barbershop.routes'
 import { notificationsRouter } from './modules/notifications/notifications.routes'
+import { adminRouter }         from './modules/admin/admin.routes'
 
 export const router = Router()
 
@@ -26,3 +27,4 @@ router.use('/dashboard',     dashboardRouter)
 router.use('/finance',       financeRouter)
 router.use('/barbershop',    barbershopRouter)
 router.use('/notifications', notificationsRouter)
+router.use('/admin',         adminRouter) // dono da plataforma

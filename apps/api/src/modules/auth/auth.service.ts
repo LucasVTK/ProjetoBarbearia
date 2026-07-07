@@ -149,7 +149,12 @@ export const authService = {
     return {
       accessToken,
       refreshToken,
-      user: { id: user.id, name: user.name, email: user.email, role: user.role },
+      // platformAdmin aqui é só para a UI mostrar a aba Plataforma —
+      // a autorização real reconsulta o banco a cada request
+      user: {
+        id: user.id, name: user.name, email: user.email, role: user.role,
+        platformAdmin: user.platformAdmin,
+      },
       barbershop: user.ownedBarbershop
         ? { id: user.ownedBarbershop.id, name: user.ownedBarbershop.name, slug: user.ownedBarbershop.slug }
         : null,
