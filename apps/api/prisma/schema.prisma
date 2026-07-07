@@ -47,6 +47,14 @@ enum NotificationRecipient {
   OWNER  // dono/barbeiro — aparece no sino do painel (e WhatsApp)
 }
 
+enum AdminAction {
+  SUSPEND    // suspendeu uma barbearia (bloqueia login + página pública)
+  REACTIVATE // reativou uma barbearia suspensa
+  DELETE     // exclusão definitiva de uma barbearia
+  VIEW       // visualizou os detalhes de uma barbearia
+  DENIED     // tentativa de acesso à área admin sem permissão
+}
+
 // ============================================================
 // TABELA: users
 // Quem acessa o painel admin (dono ou profissional)
@@ -59,12 +67,16 @@ model User {
   passwordHash String   // bcrypt — NUNCA salvar senha em texto puro
   role         Role     @default(OWNER)
   active       Boolean  @default(true)
+  // Dono da plataforma. NENHUMA rota liga este campo — só acesso direto
+  // ao banco. O middleware requirePlatformAdmin reconsulta a cada request.
+  platformAdmin Boolean @default(false)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
   ownedBarbershop Barbershop?    @relation("BarbershopOwner")
   professional    Professional?
   refreshTokens   RefreshToken[]
+  adminAuditLogs  AdminAuditLog[]
 
   @@map("users")
 }
@@ -230,6 +242,26 @@ model Appointment {
 
   @@unique([professionalId, date]) // evita agendamento duplicado (race condition)
   @@map("appointments")
+}
+
+// ============================================================
+// TABELA: admin_audit_logs
+// Registro imutável das ações do dono da plataforma — só INSERT,
+// nenhuma rota de update/delete. targetBarbershopId NÃO tem FK de
+// propósito: o log precisa sobreviver à exclusão da barbearia.
+// ============================================================
+model AdminAuditLog {
+  id                 String      @id @default(uuid())
+  adminUserId        String
+  action             AdminAction
+  targetBarbershopId String?
+  detail             String?     // ex: motivo da suspensão, nome da barbearia excluída
+  ip                 String?
+  createdAt          DateTime    @default(now())
+
+  admin User @relation(fields: [adminUserId], references: [id])
+
+  @@map("admin_audit_logs")
 }
 
 // ============================================================
