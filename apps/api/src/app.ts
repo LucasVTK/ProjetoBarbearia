@@ -11,7 +11,7 @@ import { notificationsService } from './modules/notifications/notifications.serv
 const app = express()
 const PORT = process.env.PORT || 3333
 
-// Necessário atrás de proxy (Railway) para o rate limit enxergar o IP real
+// Necessário atrás de proxy (Render) para o rate limit enxergar o IP real
 app.set('trust proxy', 1)
 
 // Segurança
