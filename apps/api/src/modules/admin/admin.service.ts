@@ -1,5 +1,6 @@
 import { prisma } from '../../config/database'
 import { AppError } from '../../shared/errors/AppError'
+import { sendWhatsApp } from '../../shared/whatsapp/sendWhatsApp'
 import type { ListQuery } from './admin.schema'
 
 const DAYS_30 = 30 * 24 * 60 * 60 * 1000
@@ -127,7 +128,7 @@ export const adminService = {
   async suspend(id: string, reason: string | undefined, ctx: AdminContext) {
     const shop = await prisma.barbershop.findUnique({
       where: { id },
-      include: { owner: { select: { id: true, platformAdmin: true } } },
+      include: { owner: { select: { id: true, name: true, phone: true, platformAdmin: true } } },
     })
     if (!shop) throw new AppError('Barbearia não encontrada', 404)
     if (shop.owner.platformAdmin) {
@@ -141,6 +142,20 @@ export const adminService = {
       prisma.refreshToken.deleteMany({ where: { userId: shop.owner.id } }),
       audit(ctx, 'SUSPEND', shop.id, reason ?? shop.name),
     ])
+
+    // Avisa o barbeiro no WhatsApp — a suspensão nunca pode ser silenciosa.
+    // Falha de envio não desfaz a suspensão (fire-and-forget).
+    if (shop.owner.phone) {
+      const message =
+        `Olá, ${shop.owner.name}. ⚠️\n` +
+        `Sua conta na plataforma BarberPro foi suspensa` +
+        (reason ? ` pelo seguinte motivo: ${reason}.` : `.`) +
+        `\nSeu acesso ao painel e sua página de agendamento foram bloqueados ` +
+        `temporariamente — nenhum dado foi apagado.\n` +
+        `Para regularizar e reativar sua conta, fale com o suporte.`
+      sendWhatsApp(shop.owner.phone, message)
+        .catch(err => console.error('Erro ao avisar suspensão via WhatsApp:', err))
+    }
 
     return { id: shop.id, active: false }
   },
