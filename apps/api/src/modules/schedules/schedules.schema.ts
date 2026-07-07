@@ -2,6 +2,8 @@ import { z } from 'zod'
 
 const timeRegex = /^([01]\d|2[0-3]):[0-5]\d$/
 
+const DAY_NAMES = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado']
+
 export const upsertScheduleSchema = z.object({
   professionalId: z.uuid(),
   schedules: z.array(
@@ -13,7 +15,27 @@ export const upsertScheduleSchema = z.object({
     }).refine(s => s.startTime < s.endTime, {
       message: 'Horário inicial deve ser antes do final',
     })
-  ),
+  // Janelas sobrepostas no mesmo dia gerariam slots duplicados na
+  // tela do cliente (o gerador itera cada janela de forma independente)
+  ).superRefine((schedules, ctx) => {
+    const byDay = new Map<number, { startTime: string; endTime: string }[]>()
+    for (const s of schedules) {
+      if (!byDay.has(s.dayOfWeek)) byDay.set(s.dayOfWeek, [])
+      byDay.get(s.dayOfWeek)!.push(s)
+    }
+    for (const [day, windows] of byDay) {
+      const sorted = [...windows].sort((a, b) => a.startTime.localeCompare(b.startTime))
+      for (let i = 1; i < sorted.length; i++) {
+        if (sorted[i].startTime < sorted[i - 1].endTime) {
+          ctx.addIssue({
+            code: 'custom',
+            message: `Os horários de ${DAY_NAMES[day]} se sobrepõem (${sorted[i - 1].startTime}–${sorted[i - 1].endTime} e ${sorted[i].startTime}–${sorted[i].endTime})`,
+          })
+          return
+        }
+      }
+    }
+  }),
 })
 
 // Query da rota pública de slots — sem validação, uuid/data malformados

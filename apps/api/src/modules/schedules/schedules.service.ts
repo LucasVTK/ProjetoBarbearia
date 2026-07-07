@@ -103,6 +103,8 @@ export const schedulesService = {
       }
     }
 
-    return slots
+    // Dados antigos podem ter janelas sobrepostas — nunca devolver
+    // o mesmo horário duas vezes ("HH:MM" ordena certo como string)
+    return [...new Set(slots)].sort()
   },
 }
