@@ -106,6 +106,7 @@ export function HomePage() {
       {/* Footer */}
       <footer className="px-6 py-8 border-t border-zinc-800 text-center text-sm text-zinc-600">
         © {new Date().getFullYear()} BarberPro. Todos os direitos reservados.
+          <br/><span>Criado por  <a href="https://www.linkedin.com/in/lucasnogueiraandrade/">Lucas Nogueira Andrade</a></span>
       </footer>
     </div>
   )
