@@ -18,6 +18,15 @@ export const refreshLimiter = rateLimit({
   message: { error: 'Muitas requisições. Aguarde alguns minutos.' },
 })
 
+// Logout é raro — instância própria para não dividir o balde do refresh
+export const logoutLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Muitas requisições. Aguarde alguns minutos.' },
+})
+
 // Protege o agendamento público contra spam
 export const bookingLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
