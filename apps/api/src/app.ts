@@ -1,6 +1,7 @@
 import './config/env'
 import express from 'express'
 import cors from 'cors'
+import cookieParser from 'cookie-parser'
 import helmet from 'helmet'
 import { allowedOrigins } from './config/urls'
 import { router } from './routes'
@@ -22,6 +23,7 @@ app.use(cors({
   credentials: true,
 }))
 app.use(express.json())
+app.use(cookieParser()) // refresh token de sessão vive em cookie httpOnly
 
 // Rotas
 app.use('/api', router)

@@ -186,7 +186,8 @@ export const appointmentsService = {
     }
 
     // Barbeiro cancelou → cliente é avisado no WhatsApp
-    if (input.status === 'CANCELLED' && appointment.status !== 'CANCELLED') {
+    // (o status anterior nunca é CANCELLED — o guard lá em cima barra)
+    if (input.status === 'CANCELLED') {
       fireAndForget(notificationsService.notifyCancellation(id, 'OWNER'))
     }
 

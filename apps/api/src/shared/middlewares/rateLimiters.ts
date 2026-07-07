@@ -1,4 +1,15 @@
-import rateLimit from 'express-rate-limit'
+import { Request } from 'express'
+import rateLimit, { ipKeyGenerator } from 'express-rate-limit'
+
+// Atrás do proxy do Vercel, req.ip é o IP do proxy — todos os usuários
+// dividiriam o mesmo balde. O Vercel envia o IP real do visitante em
+// x-vercel-forwarded-for (e sobrescreve qualquer valor vindo de fora).
+// Acesso direto à API (sem proxy) cai no req.ip normal.
+function clientIpKey(req: Request): string {
+  const header = req.headers['x-vercel-forwarded-for']
+  const ip = (Array.isArray(header) ? header[0] : header)?.split(',')[0]?.trim()
+  return ipKeyGenerator(ip || req.ip || '')
+}
 
 // Protege login/registro contra força bruta (por IP)
 export const authLimiter = rateLimit({
@@ -6,6 +17,7 @@ export const authLimiter = rateLimit({
   limit: 10,
   standardHeaders: true,
   legacyHeaders: false,
+  keyGenerator: clientIpKey,
   message: { error: 'Muitas tentativas. Aguarde alguns minutos e tente novamente.' },
 })
 
@@ -15,6 +27,7 @@ export const refreshLimiter = rateLimit({
   limit: 60,
   standardHeaders: true,
   legacyHeaders: false,
+  keyGenerator: clientIpKey,
   message: { error: 'Muitas requisições. Aguarde alguns minutos.' },
 })
 
@@ -24,6 +37,7 @@ export const logoutLimiter = rateLimit({
   limit: 30,
   standardHeaders: true,
   legacyHeaders: false,
+  keyGenerator: clientIpKey,
   message: { error: 'Muitas requisições. Aguarde alguns minutos.' },
 })
 
@@ -33,6 +47,7 @@ export const bookingLimiter = rateLimit({
   limit: 15,
   standardHeaders: true,
   legacyHeaders: false,
+  keyGenerator: clientIpKey,
   message: { error: 'Muitos agendamentos em sequência. Aguarde alguns minutos.' },
 })
 
@@ -43,5 +58,6 @@ export const publicLimiter = rateLimit({
   limit: 300,
   standardHeaders: true,
   legacyHeaders: false,
+  keyGenerator: clientIpKey,
   message: { error: 'Muitas requisições. Aguarde alguns minutos.' },
 })

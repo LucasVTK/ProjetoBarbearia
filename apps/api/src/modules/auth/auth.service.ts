@@ -175,8 +175,14 @@ export const authService = {
     const user = await prisma.user.findUnique({ where: { id: payload.sub } })
     if (!user || !user.active) throw new AppError('Usuário não encontrado', 401)
 
-    // 4. Rotaciona o refresh token (invalida o antigo, gera um novo)
-    await prisma.refreshToken.delete({ where: { token: hashToken(token) } })
+    // 4. Rotaciona o refresh token com 30s de graça: o cookie é
+    // compartilhado entre abas — se duas renovarem ao mesmo tempo, a
+    // segunda ainda entra com o token antigo em vez de derrubar a sessão.
+    // O token expirado some na limpeza do createRefreshToken.
+    await prisma.refreshToken.update({
+      where: { token: hashToken(token) },
+      data: { expiresAt: new Date(Date.now() + 30_000) },
+    })
     const newRefreshToken = await createRefreshToken(user.id)
 
     return {
