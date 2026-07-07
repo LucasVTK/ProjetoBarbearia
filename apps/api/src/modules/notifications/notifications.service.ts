@@ -1,4 +1,5 @@
 import { prisma } from '../../config/database'
+import { publicSiteUrl } from '../../config/urls'
 import { sendWhatsApp } from '../../shared/whatsapp/sendWhatsApp'
 
 // Dados mínimos de um agendamento para montar as mensagens
@@ -11,10 +12,6 @@ interface AppointmentInfo {
   service: { name: string }
   professional: { name: string }
   barbershop: { name: string }
-}
-
-function frontendUrl() {
-  return process.env.FRONTEND_URL ?? 'http://localhost:5173'
 }
 
 function formatDate(date: Date) {
@@ -109,7 +106,7 @@ export const notificationsService = {
     const apt = await loadAppointment(appointmentId)
     if (!apt) return
 
-    const cancelLink = `${frontendUrl()}/cancelar/${apt.cancelToken}`
+    const cancelLink = `${publicSiteUrl}/cancelar/${apt.cancelToken}`
     const message =
       `Olá, ${firstName(apt.client.name)}! ✅\n` +
       `Seu agendamento na ${apt.barbershop.name} foi confirmado:\n` +
@@ -140,7 +137,7 @@ export const notificationsService = {
     })
     if (existing) return
 
-    const cancelLink = `${frontendUrl()}/cancelar/${apt.cancelToken}`
+    const cancelLink = `${publicSiteUrl}/cancelar/${apt.cancelToken}`
     const message =
       `Oi, ${firstName(apt.client.name)}! ⏰\n` +
       `Lembrete: amanhã às ${formatTime(apt.date)} você tem ` +
@@ -185,7 +182,7 @@ export const notificationsService = {
         `Olá, ${firstName(apt.client.name)}. 😕\n` +
         `Seu agendamento de ${apt.service.name} na ${apt.barbershop.name} ` +
         `(${formatDate(apt.date)} às ${formatTime(apt.date)}) foi cancelado pela barbearia.\n` +
-        `Acesse ${frontendUrl()} para reagendar.`
+        `Acesse ${publicSiteUrl} para reagendar.`
 
       await createAndDeliver({
         barbershopId:  apt.barbershopId,

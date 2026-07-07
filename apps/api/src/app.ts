@@ -2,6 +2,7 @@ import './config/env'
 import express from 'express'
 import cors from 'cors'
 import helmet from 'helmet'
+import { allowedOrigins } from './config/urls'
 import { router } from './routes'
 import { errorHandler } from './shared/middlewares/errorHandler'
 import { notificationsService } from './modules/notifications/notifications.service'
@@ -16,12 +17,6 @@ app.set('trust proxy', 1)
 app.use(helmet())
 
 // CORS: lista fechada de origens permitidas.
-// FRONTEND_URL aceita várias URLs separadas por vírgula (o Vercel cria
-// mais de um domínio para o mesmo site) e tolera barra no final.
-const allowedOrigins = (process.env.FRONTEND_URL ?? 'http://localhost:5173')
-  .split(',')
-  .map(origin => origin.trim().replace(/\/+$/, ''))
-
 app.use(cors({
   origin: allowedOrigins,
   credentials: true,
