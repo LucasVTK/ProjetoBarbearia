@@ -1,9 +1,11 @@
 import { useAuthStore } from '../store/authStore'
 
-// Mesma origem por padrão: em produção o proxy do Vercel repassa /api
-// para a API; no dev o proxy do Vite faz o mesmo. Assim o cookie httpOnly
-// do refresh token é first-party em qualquer navegador (inclusive Safari).
-const BASE_URL = import.meta.env.VITE_API_URL ?? ''
+// Mesma origem: em produção o proxy do Vercel repassa /api para a API;
+// no dev o proxy do Vite faz o mesmo. Assim o cookie httpOnly do refresh
+// token é first-party em qualquer navegador (inclusive Safari).
+// Em produção a origem própria é obrigatória (senão o cookie SameSite=Lax
+// não trafega) — VITE_API_URL só vale como override no dev.
+const BASE_URL = import.meta.env.PROD ? '' : (import.meta.env.VITE_API_URL ?? '')
 
 interface RequestOptions {
   method?: string
