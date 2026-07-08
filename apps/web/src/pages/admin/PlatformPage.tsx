@@ -200,7 +200,7 @@ export function PlatformPage() {
 
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-xl font-bold text-white">Plataforma</h1>
+          <h1 className="text-xl font-bold text-zinc-100">Plataforma</h1>
           <p className="text-sm text-zinc-500">Todas as barbearias que assinam o BarberPro</p>
         </div>
       </div>
@@ -221,7 +221,7 @@ export function PlatformPage() {
             { k: overview.inactive14d,     l: 'Sem atividade 14d+',  d: 'risco de churn',                   cls: 'text-orange-400' },
           ].map(t => (
             <div key={t.l} className="bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3.5">
-              <p className="text-xl font-bold text-white tabular-nums">{t.k}</p>
+              <p className="text-xl font-bold text-zinc-100 tabular-nums">{t.k}</p>
               <p className="text-xs text-zinc-500">{t.l}</p>
               <p className={`text-[11px] mt-1 ${t.cls}`}>{t.d}</p>
             </div>
@@ -236,7 +236,7 @@ export function PlatformPage() {
           <input
             type="text" value={search} onChange={e => setSearch(e.target.value)}
             placeholder="Buscar por barbearia, dono ou e-mail…"
-            className="w-full bg-zinc-900 border border-zinc-800 rounded-lg pl-9 pr-3 py-2 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-brand-500"
+            className="w-full bg-zinc-900 border border-zinc-800 rounded-lg pl-9 pr-3 py-2 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-brand-500"
           />
         </div>
         {([
@@ -277,7 +277,7 @@ export function PlatformPage() {
               return (
                 <tr key={s.id} className="border-b border-zinc-800/50 last:border-0 hover:bg-zinc-800/30">
                   <td className="px-4 py-3">
-                    <p className="font-semibold text-white">{s.name}{s.isPlatformOwner && <span className="ml-2 text-[10px] text-brand-400">(sua)</span>}</p>
+                    <p className="font-semibold text-zinc-100">{s.name}{s.isPlatformOwner && <span className="ml-2 text-[10px] text-brand-400">(sua)</span>}</p>
                     <p className="text-[11px] text-zinc-600">/agendar/{s.slug}</p>
                   </td>
                   <td className="px-4 py-3 text-zinc-400">
@@ -328,7 +328,7 @@ export function PlatformPage() {
 
       {/* Auditoria */}
       <section className="bg-zinc-900 border border-zinc-800 rounded-xl p-5">
-        <h2 className="text-sm font-semibold text-white mb-1">Auditoria</h2>
+        <h2 className="text-sm font-semibold text-zinc-100 mb-1">Auditoria</h2>
         <p className="text-xs text-zinc-600 mb-4">Registro imutável de tudo que o administrador fez</p>
         {audit.length === 0 ? (
           <p className="text-sm text-zinc-600 py-4 text-center">Nenhuma ação registrada ainda</p>
@@ -359,8 +359,8 @@ export function PlatformPage() {
         <div className="fixed inset-0 bg-black/60 z-50 flex items-end sm:items-center justify-center p-4" onClick={() => setDetail(null)}>
           <div className="bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-md" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-800">
-              <h3 className="text-base font-semibold text-white">{detail.name}</h3>
-              <button onClick={() => setDetail(null)} className="text-zinc-500 hover:text-white transition-colors">✕</button>
+              <h3 className="text-base font-semibold text-zinc-100">{detail.name}</h3>
+              <button onClick={() => setDetail(null)} className="text-zinc-500 hover:text-zinc-100 transition-colors">✕</button>
             </div>
             <div className="px-5 py-4 space-y-2 text-sm">
               {[
@@ -405,7 +405,7 @@ export function PlatformPage() {
               <div className="w-12 h-12 bg-red-500/10 rounded-full flex items-center justify-center mb-4">
                 <XCircle className="w-6 h-6 text-red-400" />
               </div>
-              <h3 className="text-base font-bold text-white mb-1">Suspender "{suspendTarget.name}"?</h3>
+              <h3 className="text-base font-bold text-zinc-100 mb-1">Suspender "{suspendTarget.name}"?</h3>
               <p className="text-sm text-zinc-400 mb-3">
                 O dono perde o acesso na hora e a página de agendamento sai do ar.
                 Nada é apagado — você pode reativar quando quiser.
@@ -413,7 +413,7 @@ export function PlatformPage() {
               <input
                 type="text" value={suspendReason} onChange={e => setSuspendReason(e.target.value)}
                 placeholder="Motivo (opcional — fica na auditoria)" maxLength={200}
-                className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-brand-500"
+                className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-brand-500"
               />
             </div>
             <div className="flex gap-2 px-5 pb-5">

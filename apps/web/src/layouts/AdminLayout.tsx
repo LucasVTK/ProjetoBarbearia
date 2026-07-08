@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import { api } from '../services/api'
+import { ThemeToggle } from '../components/ThemeToggle'
 import {
   Scissors, LayoutDashboard, Calendar, Users,
   Briefcase, TrendingUp, Settings, LogOut, Menu, Bell, BellOff, Shield,
@@ -138,7 +139,7 @@ export function AdminLayout() {
           <div className="w-8 h-8 bg-brand-500 rounded-lg flex items-center justify-center flex-shrink-0">
             <Scissors className="w-4 h-4 text-white" />
           </div>
-          <span className="text-base font-bold text-white">BarberPro</span>
+          <span className="text-base font-bold text-zinc-100">BarberPro</span>
         </div>
 
         {/* Nav */}
@@ -151,7 +152,7 @@ export function AdminLayout() {
                 `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                   isActive
                     ? 'bg-brand-500/10 text-brand-400'
-                    : 'text-zinc-400 hover:text-white hover:bg-zinc-800'
+                    : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800'
                 }`
               }
             >
@@ -173,7 +174,7 @@ export function AdminLayout() {
                   `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                     isActive
                       ? 'bg-brand-500/10 text-brand-400'
-                      : 'text-zinc-400 hover:text-white hover:bg-zinc-800'
+                      : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800'
                   }`
                 }
               >
@@ -191,13 +192,13 @@ export function AdminLayout() {
               {user ? getInitials(user.name) : '?'}
             </div>
             <div className="min-w-0">
-              <p className="text-sm font-medium text-white truncate">{user?.name ?? '...'}</p>
+              <p className="text-sm font-medium text-zinc-100 truncate">{user?.name ?? '...'}</p>
               <p className="text-xs text-zinc-500 truncate">{barbershop?.name ?? ''}</p>
             </div>
           </div>
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors"
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
           >
             <LogOut className="w-4 h-4" />
             Sair
@@ -209,69 +210,73 @@ export function AdminLayout() {
       <div className="flex-1 flex flex-col min-w-0">
         <header className="flex items-center justify-between px-4 md:px-6 py-4 border-b border-zinc-800 bg-zinc-900 md:bg-transparent">
           <button
-            className="md:hidden text-zinc-400 hover:text-white transition-colors"
+            className="md:hidden text-zinc-400 hover:text-zinc-100 transition-colors"
             onClick={() => setSidebarOpen(true)}
           >
             <Menu className="w-5 h-5" />
           </button>
           <div className="hidden md:block" />
 
-          {/* Sino de notificações */}
-          <div className="relative">
-            <button onClick={toggleBell} className="relative text-zinc-400 hover:text-white transition-colors">
-              <Bell className="w-5 h-5" />
-              {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 min-w-[16px] h-4 bg-brand-500 rounded-full flex items-center justify-center text-white text-[10px] font-bold px-0.5">
-                  {unreadCount > 9 ? '9+' : unreadCount}
-                </span>
-              )}
-            </button>
+          <div className="flex items-center gap-4">
+            <ThemeToggle />
 
-            {bellOpen && (
-              <>
-                {/* clique fora fecha */}
-                <div className="fixed inset-0 z-30" onClick={() => setBellOpen(false)} />
+            {/* Sino de notificações */}
+            <div className="relative">
+              <button onClick={toggleBell} className="relative text-zinc-400 hover:text-zinc-100 transition-colors">
+                <Bell className="w-5 h-5" />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 min-w-[16px] h-4 bg-brand-500 rounded-full flex items-center justify-center text-white text-[10px] font-bold px-0.5">
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
+              </button>
 
-                <div className="absolute right-0 top-8 z-40 w-80 max-w-[calc(100vw-2rem)] bg-zinc-900 border border-zinc-800 rounded-xl shadow-xl overflow-hidden">
-                  <div className="px-4 py-3 border-b border-zinc-800">
-                    <p className="text-sm font-semibold text-white">Notificações</p>
+              {bellOpen && (
+                <>
+                  {/* clique fora fecha */}
+                  <div className="fixed inset-0 z-30" onClick={() => setBellOpen(false)} />
+
+                  <div className="absolute right-0 top-8 z-40 w-80 max-w-[calc(100vw-2rem)] bg-zinc-900 border border-zinc-800 rounded-xl shadow-xl overflow-hidden">
+                    <div className="px-4 py-3 border-b border-zinc-800">
+                      <p className="text-sm font-semibold text-zinc-100">Notificações</p>
+                    </div>
+
+                    {notifications.length === 0 ? (
+                      <div className="flex flex-col items-center gap-2 py-10 text-zinc-600">
+                        <BellOff className="w-5 h-5" />
+                        <p className="text-xs">Nenhuma notificação ainda</p>
+                      </div>
+                    ) : (
+                      <div className="max-h-96 overflow-y-auto divide-y divide-zinc-800/60">
+                        {notifications.map(n => (
+                          <button
+                            key={n.id}
+                            onClick={() => {
+                              setBellOpen(false)
+                              // Vai direto para o dia do corte e destaca o agendamento
+                              const d = new Date(n.appointment.date)
+                              const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+                              navigate(`/admin/agenda?date=${dateStr}&highlight=${n.appointmentId}`)
+                            }}
+                            className="w-full text-left px-4 py-3 hover:bg-zinc-800/50 transition-colors flex gap-2.5"
+                          >
+                            {!n.readAt && (
+                              <span className="w-1.5 h-1.5 bg-brand-500 rounded-full mt-1.5 flex-shrink-0" />
+                            )}
+                            <div className={`min-w-0 ${n.readAt ? 'pl-4' : ''}`}>
+                              <p className="text-xs text-zinc-300 whitespace-pre-line leading-relaxed line-clamp-3">
+                                {n.message}
+                              </p>
+                              <p className="text-[10px] text-zinc-600 mt-1">{timeAgo(n.createdAt)}</p>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
-
-                  {notifications.length === 0 ? (
-                    <div className="flex flex-col items-center gap-2 py-10 text-zinc-600">
-                      <BellOff className="w-5 h-5" />
-                      <p className="text-xs">Nenhuma notificação ainda</p>
-                    </div>
-                  ) : (
-                    <div className="max-h-96 overflow-y-auto divide-y divide-zinc-800/60">
-                      {notifications.map(n => (
-                        <button
-                          key={n.id}
-                          onClick={() => {
-                            setBellOpen(false)
-                            // Vai direto para o dia do corte e destaca o agendamento
-                            const d = new Date(n.appointment.date)
-                            const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-                            navigate(`/admin/agenda?date=${dateStr}&highlight=${n.appointmentId}`)
-                          }}
-                          className="w-full text-left px-4 py-3 hover:bg-zinc-800/50 transition-colors flex gap-2.5"
-                        >
-                          {!n.readAt && (
-                            <span className="w-1.5 h-1.5 bg-brand-500 rounded-full mt-1.5 flex-shrink-0" />
-                          )}
-                          <div className={`min-w-0 ${n.readAt ? 'pl-4' : ''}`}>
-                            <p className="text-xs text-zinc-300 whitespace-pre-line leading-relaxed line-clamp-3">
-                              {n.message}
-                            </p>
-                            <p className="text-[10px] text-zinc-600 mt-1">{timeAgo(n.createdAt)}</p>
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </>
-            )}
+                </>
+              )}
+            </div>
           </div>
         </header>
 

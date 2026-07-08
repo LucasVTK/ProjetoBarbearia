@@ -117,7 +117,7 @@ export function ServicesPage() {
 
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold text-white">Serviços</h1>
+          <h1 className="text-xl font-bold text-zinc-100">Serviços</h1>
           <p className="text-sm text-zinc-500">{active.length} ativos · {inactive.length} inativos</p>
         </div>
         <button onClick={openCreate}
@@ -154,7 +154,7 @@ export function ServicesPage() {
             </span>
 
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-white">{service.name}</p>
+              <p className="text-sm font-semibold text-zinc-100">{service.name}</p>
               {service.description && (
                 <p className="text-xs text-zinc-500 truncate mt-0.5">{service.description}</p>
               )}
@@ -164,7 +164,7 @@ export function ServicesPage() {
               <Clock className="w-3.5 h-3.5" />{service.duration} min
             </div>
 
-            <div className="flex items-center gap-1 text-sm font-bold text-white flex-shrink-0">
+            <div className="flex items-center gap-1 text-sm font-bold text-zinc-100 flex-shrink-0">
               <DollarSign className="w-3.5 h-3.5 text-zinc-500" />
               {parseFloat(service.price).toFixed(2).replace('.', ',')}
             </div>
@@ -177,7 +177,7 @@ export function ServicesPage() {
                   : <ToggleLeft className="w-4 h-4 text-zinc-600" />}
               </button>
               <button onClick={() => openEdit(service)}
-                className="p-1.5 rounded-lg hover:bg-zinc-800 text-zinc-400 hover:text-white transition-colors">
+                className="p-1.5 rounded-lg hover:bg-zinc-800 text-zinc-400 hover:text-zinc-100 transition-colors">
                 <Pencil className="w-3.5 h-3.5" />
               </button>
               <button onClick={() => setDeleteConfirm(service.id)}
@@ -275,8 +275,8 @@ function Modal({ title, children, onClose }: { title: string; children: React.Re
     <div className="fixed inset-0 bg-black/70 z-50 flex items-end sm:items-center justify-center p-4">
       <div className="bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-md">
         <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-800">
-          <h3 className="text-base font-semibold text-white">{title}</h3>
-          <button onClick={onClose} className="text-zinc-500 hover:text-white transition-colors text-lg leading-none">✕</button>
+          <h3 className="text-base font-semibold text-zinc-100">{title}</h3>
+          <button onClick={onClose} className="text-zinc-500 hover:text-zinc-100 transition-colors text-lg leading-none">✕</button>
         </div>
         <div className="px-6 py-5">{children}</div>
       </div>

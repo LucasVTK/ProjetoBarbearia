@@ -134,7 +134,7 @@ export function BookingPage() {
             <div className="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
               <CheckCircle className="w-8 h-8 text-green-400" />
             </div>
-            <h2 className="text-xl font-bold text-white mb-1">Agendado com sucesso!</h2>
+            <h2 className="text-xl font-bold text-zinc-100 mb-1">Agendado com sucesso!</h2>
             <p className="text-zinc-400 text-sm">Enviaremos um lembrete pelo WhatsApp antes do atendimento.</p>
           </div>
 
@@ -149,7 +149,7 @@ export function BookingPage() {
           <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-4 mb-4">
             <div className="flex items-center gap-2 mb-2">
               <AlertTriangle className="w-4 h-4 text-orange-400 flex-shrink-0" />
-              <p className="text-sm font-semibold text-white">Guarde seu link de cancelamento</p>
+              <p className="text-sm font-semibold text-zinc-100">Guarde seu link de cancelamento</p>
             </div>
             <p className="text-xs text-zinc-500 mb-3 leading-relaxed">
               Cancelamentos devem ser feitos com no mínimo{' '}
@@ -199,11 +199,11 @@ export function BookingPage() {
                   {s.type === 'COMBO' ? 'Combo' : 'Serviço'}
                 </span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-white">{s.name}</p>
+                  <p className="text-sm font-semibold text-zinc-100">{s.name}</p>
                   {s.description && <p className="text-xs text-zinc-500">{s.description}</p>}
                 </div>
                 <div className="text-right flex-shrink-0">
-                  <p className="text-sm font-bold text-white">R$ {parseFloat(s.price).toFixed(0)}</p>
+                  <p className="text-sm font-bold text-zinc-100">R$ {parseFloat(s.price).toFixed(0)}</p>
                   <p className="text-xs text-zinc-500 flex items-center gap-0.5 justify-end">
                     <Clock className="w-3 h-3" />{s.duration}min
                   </p>
@@ -262,7 +262,7 @@ export function BookingPage() {
                     className={`py-2.5 rounded-lg text-sm font-medium border transition-colors ${
                       selectedTime === slot
                         ? 'bg-brand-500 border-brand-500 text-white'
-                        : 'bg-zinc-900 border-zinc-800 text-white hover:border-zinc-600'
+                        : 'bg-zinc-900 border-zinc-800 text-zinc-100 hover:border-zinc-600'
                     }`}>
                     {slot}
                   </button>
@@ -276,10 +276,10 @@ export function BookingPage() {
             <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-3 flex items-center gap-3">
               <div className="flex-1 min-w-0">
                 <p className="text-xs text-zinc-500">Serviço selecionado</p>
-                <p className="text-sm font-semibold text-white">{selectedService.name}</p>
+                <p className="text-sm font-semibold text-zinc-100">{selectedService.name}</p>
               </div>
               <div className="text-right">
-                <p className="text-sm font-bold text-white">R$ {parseFloat(selectedService.price).toFixed(0)}</p>
+                <p className="text-sm font-bold text-zinc-100">R$ {parseFloat(selectedService.price).toFixed(0)}</p>
                 <p className="text-xs text-zinc-500">{selectedService.duration} min</p>
               </div>
             </div>
@@ -308,21 +308,21 @@ export function BookingPage() {
         <div className="bg-zinc-900 border border-zinc-800 rounded-xl divide-y divide-zinc-800">
           <div className="px-4 py-3 flex items-center justify-between">
             <span className="text-xs text-zinc-500">Serviço</span>
-            <span className="text-sm font-semibold text-white">{selectedService?.name}</span>
+            <span className="text-sm font-semibold text-zinc-100">{selectedService?.name}</span>
           </div>
           <div className="px-4 py-3 flex items-center justify-between">
             <span className="text-xs text-zinc-500">Data</span>
-            <span className="text-sm text-white capitalize">
+            <span className="text-sm text-zinc-100 capitalize">
               {selectedDate.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}
             </span>
           </div>
           <div className="px-4 py-3 flex items-center justify-between">
             <span className="text-xs text-zinc-500">Horário</span>
-            <span className="text-sm text-white">{selectedTime}</span>
+            <span className="text-sm text-zinc-100">{selectedTime}</span>
           </div>
           <div className="px-4 py-3 flex items-center justify-between">
             <span className="text-xs text-zinc-500">Valor</span>
-            <span className="text-sm font-bold text-white">
+            <span className="text-sm font-bold text-zinc-100">
               R$ {parseFloat(selectedService?.price ?? '0').toFixed(2).replace('.', ',')}
             </span>
           </div>

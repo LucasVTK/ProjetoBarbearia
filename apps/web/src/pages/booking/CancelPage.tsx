@@ -80,7 +80,7 @@ export function CancelPage() {
           <div className="w-14 h-14 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
             <XCircle className="w-7 h-7 text-red-400" />
           </div>
-          <h2 className="text-lg font-bold text-white mb-2">Link inválido</h2>
+          <h2 className="text-lg font-bold text-zinc-100 mb-2">Link inválido</h2>
           <p className="text-sm text-zinc-500 mb-6">
             Este link de cancelamento não existe ou já expirou.
           </p>
@@ -105,7 +105,7 @@ export function CancelPage() {
               cancelled || appointment.status === 'CANCELLED' ? 'text-green-400' : 'text-zinc-500'
             }`} />
           </div>
-          <h2 className="text-lg font-bold text-white mb-2">
+          <h2 className="text-lg font-bold text-zinc-100 mb-2">
             {cancelled ? 'Agendamento cancelado' : 'Este agendamento já foi encerrado'}
           </h2>
           <p className="text-sm text-zinc-500 mb-6">
@@ -127,10 +127,10 @@ export function CancelPage() {
     <div className="min-h-screen bg-zinc-950 flex flex-col max-w-lg mx-auto px-5 py-8">
 
       <div className="mb-6">
-        <Link to="/" className="inline-flex items-center gap-1.5 text-sm text-zinc-500 hover:text-white transition-colors mb-4">
+        <Link to="/" className="inline-flex items-center gap-1.5 text-sm text-zinc-500 hover:text-zinc-100 transition-colors mb-4">
           ← Voltar
         </Link>
-        <h1 className="text-xl font-bold text-white">Meu agendamento</h1>
+        <h1 className="text-xl font-bold text-zinc-100">Meu agendamento</h1>
         <p className="text-sm text-zinc-500 mt-1">{appointment.barbershop.name}</p>
       </div>
 
@@ -144,8 +144,8 @@ export function CancelPage() {
         <div className="px-4 py-4 space-y-3">
           <div className="flex items-center gap-2">
             <Scissors className="w-4 h-4 text-brand-500" />
-            <p className="text-base font-bold text-white">{appointment.service.name}</p>
-            <span className="ml-auto text-base font-bold text-white">
+            <p className="text-base font-bold text-zinc-100">{appointment.service.name}</p>
+            <span className="ml-auto text-base font-bold text-zinc-100">
               R$ {parseFloat(appointment.price).toFixed(2).replace('.', ',')}
             </span>
           </div>
@@ -197,9 +197,9 @@ export function CancelPage() {
               <div className="w-12 h-12 bg-red-500/10 rounded-full flex items-center justify-center mb-4">
                 <XCircle className="w-6 h-6 text-red-400" />
               </div>
-              <h3 className="text-base font-bold text-white mb-1">Confirmar cancelamento?</h3>
+              <h3 className="text-base font-bold text-zinc-100 mb-1">Confirmar cancelamento?</h3>
               <p className="text-sm text-zinc-400">
-                <strong className="text-white">{appointment.service.name}</strong> — {formatTime(appointment.date)},{' '}
+                <strong className="text-zinc-100">{appointment.service.name}</strong> — {formatTime(appointment.date)},{' '}
                 {formatDate(appointment.date)}
               </p>
               <p className="text-xs text-zinc-600 mt-3 leading-relaxed">

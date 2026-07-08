@@ -147,7 +147,7 @@ export function ClientsPage() {
 
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold text-white">Clientes</h1>
+          <h1 className="text-xl font-bold text-zinc-100">Clientes</h1>
           <p className="text-sm text-zinc-500">{clients.length} cadastrado{clients.length !== 1 ? 's' : ''}</p>
         </div>
       </div>
@@ -166,7 +166,7 @@ export function ClientsPage() {
           value={search}
           onChange={e => setSearch(e.target.value)}
           placeholder="Buscar por nome ou telefone..."
-          className="w-full bg-zinc-900 border border-zinc-800 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-brand-500 transition-colors"
+          className="w-full bg-zinc-900 border border-zinc-800 rounded-xl pl-10 pr-4 py-2.5 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-brand-500 transition-colors"
         />
       </div>
 
@@ -193,7 +193,7 @@ export function ClientsPage() {
 
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <p className="text-sm font-semibold text-white truncate">{client.name}</p>
+                  <p className="text-sm font-semibold text-zinc-100 truncate">{client.name}</p>
                   {client.noShowCount >= 2 && (
                     <span className="text-xs bg-orange-500/10 text-orange-400 px-1.5 py-0.5 rounded-full flex-shrink-0">
                       {client.noShowCount}× no-show
@@ -216,7 +216,7 @@ export function ClientsPage() {
               </div>
 
               <div className="text-right flex-shrink-0">
-                <p className="text-sm font-bold text-white">{client.totalVisits}× visitas</p>
+                <p className="text-sm font-bold text-zinc-100">{client.totalVisits}× visitas</p>
                 <p className="text-xs text-zinc-500">
                   R$ {client.totalSpent.toFixed(2).replace('.', ',')} total
                 </p>
@@ -246,8 +246,8 @@ export function ClientsPage() {
             onClick={e => e.stopPropagation()}
           >
             <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-800 flex-shrink-0">
-              <h3 className="text-base font-semibold text-white">Perfil do cliente</h3>
-              <button onClick={() => setSelected(null)} className="text-zinc-500 hover:text-white transition-colors">✕</button>
+              <h3 className="text-base font-semibold text-zinc-100">Perfil do cliente</h3>
+              <button onClick={() => setSelected(null)} className="text-zinc-500 hover:text-zinc-100 transition-colors">✕</button>
             </div>
 
             <div className="overflow-y-auto">
@@ -265,7 +265,7 @@ export function ClientsPage() {
                         onChange={e => setNameInput(e.target.value)}
                         onKeyDown={e => { if (e.key === 'Enter') handleSaveName(); if (e.key === 'Escape') { setEditingName(false); setNameInput(selected.name) } }}
                         autoFocus
-                        className="flex-1 min-w-0 bg-zinc-800 border border-zinc-700 rounded-lg px-2.5 py-1.5 text-sm text-white focus:outline-none focus:border-brand-500 transition-colors"
+                        className="flex-1 min-w-0 bg-zinc-800 border border-zinc-700 rounded-lg px-2.5 py-1.5 text-sm text-zinc-100 focus:outline-none focus:border-brand-500 transition-colors"
                       />
                       <button
                         onClick={handleSaveName}
@@ -285,7 +285,7 @@ export function ClientsPage() {
                     </div>
                   ) : (
                     <div className="flex items-center gap-2">
-                      <p className="text-base font-bold text-white truncate">{selected.name}</p>
+                      <p className="text-base font-bold text-zinc-100 truncate">{selected.name}</p>
                       <button
                         onClick={() => setEditingName(true)}
                         className="text-zinc-600 hover:text-brand-400 transition-colors flex-shrink-0"
@@ -319,7 +319,7 @@ export function ClientsPage() {
                   onChange={e => setNotes(e.target.value)}
                   placeholder="Ex: prefere máquina 2, alérgico a produto X..."
                   rows={2}
-                  className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-brand-500 transition-colors resize-none"
+                  className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-brand-500 transition-colors resize-none"
                 />
                 <button
                   onClick={handleSaveNotes}
@@ -346,7 +346,7 @@ export function ClientsPage() {
                         <div key={apt.id} className="flex items-center gap-3 py-2 border-b border-zinc-800/50 last:border-0">
                           <Icon className={`w-4 h-4 flex-shrink-0 ${cfg?.color ?? 'text-zinc-400'}`} />
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm text-white">{apt.service}</p>
+                            <p className="text-sm text-zinc-100">{apt.service}</p>
                             <p className="text-xs text-zinc-500">{formatDate(apt.date)} · {apt.professional}</p>
                           </div>
                           <span className="text-sm font-medium text-zinc-300 flex-shrink-0">
@@ -370,7 +370,7 @@ function Stat({ icon, label, value, warn }: { icon: React.ReactNode; label: stri
   return (
     <div className="flex flex-col items-center py-3 gap-1">
       <span className={warn ? 'text-orange-400' : 'text-zinc-500'}>{icon}</span>
-      <p className={`text-sm font-bold ${warn ? 'text-orange-400' : 'text-white'}`}>{value}</p>
+      <p className={`text-sm font-bold ${warn ? 'text-orange-400' : 'text-zinc-100'}`}>{value}</p>
       <p className="text-xs text-zinc-600">{label}</p>
     </div>
   )

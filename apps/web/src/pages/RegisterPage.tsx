@@ -49,11 +49,11 @@ export function RegisterPage() {
           <div className="w-9 h-9 bg-brand-500 rounded-lg flex items-center justify-center">
             <Scissors className="w-5 h-5 text-white" />
           </div>
-          <span className="text-xl font-bold text-white">BarberPro</span>
+          <span className="text-xl font-bold text-zinc-100">BarberPro</span>
         </div>
 
         <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8">
-          <h1 className="text-xl font-bold text-white mb-1">Criar conta grátis</h1>
+          <h1 className="text-xl font-bold text-zinc-100 mb-1">Criar conta grátis</h1>
           <p className="text-sm text-zinc-500 mb-4">Configure sua barbearia em menos de 5 minutos</p>
 
           <div className="flex flex-col gap-1.5 mb-5 p-3 bg-zinc-800/50 rounded-lg">
@@ -83,7 +83,7 @@ export function RegisterPage() {
                   type={field.type} name={field.name}
                   value={form[field.name as keyof typeof form]}
                   onChange={handleChange} placeholder={field.placeholder} required
-                  className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-brand-500 transition-colors"
+                  className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-2.5 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-brand-500 transition-colors"
                 />
               </div>
             ))}
@@ -95,7 +95,7 @@ export function RegisterPage() {
                   type={showPassword ? 'text' : 'password'} name="password"
                   value={form.password} onChange={handleChange}
                   placeholder="Mínimo 8 caracteres" required minLength={8}
-                  className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-2.5 pr-10 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-brand-500 transition-colors"
+                  className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-2.5 pr-10 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-brand-500 transition-colors"
                 />
                 <button type="button" onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors">
@@ -111,7 +111,7 @@ export function RegisterPage() {
                 value={confirmPassword}
                 onChange={e => { setConfirmPassword(e.target.value); setError('') }}
                 placeholder="Repita a senha" required minLength={8}
-                className={`w-full bg-zinc-800 border rounded-lg px-4 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none transition-colors ${
+                className={`w-full bg-zinc-800 border rounded-lg px-4 py-2.5 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none transition-colors ${
                   passwordsMismatch ? 'border-red-500/60 focus:border-red-500' : 'border-zinc-700 focus:border-brand-500'
                 }`}
               />

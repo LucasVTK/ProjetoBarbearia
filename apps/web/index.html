@@ -13,6 +13,14 @@
   </head>
   <body>
     <div id="root"></div>
+    <!-- Aplica o tema salvo ANTES do React montar — evita o flash de
+         tema errado no carregamento. Escuro é o padrão. -->
+    <script>
+      try {
+        document.documentElement.dataset.theme =
+          localStorage.getItem('barberpro-theme') === 'light' ? 'light' : 'dark'
+      } catch (e) { /* localStorage bloqueado — fica no escuro padrão */ }
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

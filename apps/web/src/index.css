@@ -3,6 +3,41 @@
 @tailwind utilities;
 
 @layer base {
+  /* Tema escuro (padrão) — valores originais da escala zinc do Tailwind,
+     em triplas RGB para o modificador de opacidade funcionar */
+  :root {
+    color-scheme: dark;
+    --z-50:  250 250 250;
+    --z-100: 244 244 245;
+    --z-200: 228 228 231;
+    --z-300: 212 212 216;
+    --z-400: 161 161 170;
+    --z-500: 113 113 122;
+    --z-600: 82 82 91;
+    --z-700: 63 63 70;
+    --z-800: 39 39 42;
+    --z-900: 24 24 27;
+    --z-950: 9 9 11;
+  }
+
+  /* Tema claro — a escala inverte: o que era fundo escuro vira claro e o
+     que era texto claro vira escuro. O 500 (texto secundário/placeholder)
+     funciona nos dois temas e fica fixo. */
+  :root[data-theme='light'] {
+    color-scheme: light;
+    --z-50:  9 9 11;
+    --z-100: 24 24 27;
+    --z-200: 39 39 42;
+    --z-300: 63 63 70;
+    --z-400: 82 82 91;
+    --z-500: 113 113 122;
+    --z-600: 161 161 170;
+    --z-700: 212 212 216;
+    --z-800: 228 228 231;
+    --z-900: 255 255 255;
+    --z-950: 244 244 245;
+  }
+
   * {
     box-sizing: border-box;
     margin: 0;
@@ -16,10 +51,10 @@
 
 @layer components {
   .input {
-    @apply w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-brand-500 transition-colors;
+    @apply w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-2.5 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-brand-500 transition-colors;
   }
 
   .input-field {
-    @apply w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-brand-500 transition-colors;
+    @apply w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2.5 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-brand-500 transition-colors;
   }
 }

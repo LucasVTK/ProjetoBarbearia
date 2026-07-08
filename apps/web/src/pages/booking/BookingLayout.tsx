@@ -1,4 +1,5 @@
 import { Scissors } from 'lucide-react'
+import { ThemeToggle } from '../../components/ThemeToggle'
 
 interface Props {
   step: number       // 1, 2, 3
@@ -22,9 +23,10 @@ export function BookingLayout({ step, title, subtitle, barbershopName, children 
             <Scissors className="w-4 h-4 text-white" />
           </div>
           <div>
-            <p className="text-sm font-bold text-white leading-none">{barbershopName ?? 'Agendamento'}</p>
+            <p className="text-sm font-bold text-zinc-100 leading-none">{barbershopName ?? 'Agendamento'}</p>
             <p className="text-xs text-zinc-500">Agendamento online</p>
           </div>
+          <ThemeToggle className="ml-auto" />
         </div>
 
         {/* Barra de progresso */}
@@ -43,7 +45,7 @@ export function BookingLayout({ step, title, subtitle, barbershopName, children 
                   }`}>
                     {isDone ? '✓' : num}
                   </div>
-                  <span className={`text-xs font-medium hidden sm:inline ${isCurrent ? 'text-white' : 'text-zinc-600'}`}>
+                  <span className={`text-xs font-medium hidden sm:inline ${isCurrent ? 'text-zinc-100' : 'text-zinc-600'}`}>
                     {s}
                   </span>
                 </div>
@@ -57,7 +59,7 @@ export function BookingLayout({ step, title, subtitle, barbershopName, children 
 
         {/* Título da etapa */}
         <div>
-          <h1 className="text-lg font-bold text-white">{title}</h1>
+          <h1 className="text-lg font-bold text-zinc-100">{title}</h1>
           {subtitle && <p className="text-sm text-zinc-500 mt-0.5">{subtitle}</p>}
         </div>
       </header>

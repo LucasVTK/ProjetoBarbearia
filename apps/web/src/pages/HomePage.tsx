@@ -10,10 +10,10 @@ export function HomePage() {
           <div className="w-8 h-8 bg-brand-500 rounded-lg flex items-center justify-center">
             <Scissors className="w-4 h-4 text-white" />
           </div>
-          <span className="text-lg font-bold text-white">BarberPro</span>
+          <span className="text-lg font-bold text-zinc-100">BarberPro</span>
         </div>
         <div className="flex items-center gap-3">
-          <a href="/login" className="text-sm text-zinc-400 hover:text-white transition-colors">
+          <a href="/login" className="text-sm text-zinc-400 hover:text-zinc-100 transition-colors">
             Entrar
           </a>
           <a
@@ -32,7 +32,7 @@ export function HomePage() {
           Sistema profissional para barbearias
         </div>
 
-        <h1 className="text-4xl md:text-5xl font-extrabold text-white leading-tight mb-4">
+        <h1 className="text-4xl md:text-5xl font-extrabold text-zinc-100 leading-tight mb-4">
           Chega de agenda pelo{' '}
           <span className="text-brand-500">WhatsApp</span>
         </h1>
@@ -61,7 +61,7 @@ export function HomePage() {
 
       {/* Features */}
       <section className="px-6 py-16 max-w-5xl mx-auto">
-        <h2 className="text-2xl font-bold text-white text-center mb-12">
+        <h2 className="text-2xl font-bold text-zinc-100 text-center mb-12">
           Tudo que sua barbearia precisa
         </h2>
 
@@ -87,7 +87,7 @@ export function HomePage() {
       {/* CTA Final */}
       <section className="px-6 py-16 text-center">
         <div className="max-w-xl mx-auto bg-zinc-900 border border-zinc-800 rounded-2xl p-10">
-          <h3 className="text-2xl font-bold text-white mb-3">
+          <h3 className="text-2xl font-bold text-zinc-100 mb-3">
             Pronto para profissionalizar sua barbearia?
           </h3>
           <p className="text-zinc-400 mb-6">
@@ -124,7 +124,7 @@ function FeatureCard({
   return (
     <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 hover:border-zinc-700 transition-colors">
       <div className="mb-4">{icon}</div>
-      <h3 className="text-white font-semibold mb-2">{title}</h3>
+      <h3 className="text-zinc-100 font-semibold mb-2">{title}</h3>
       <p className="text-zinc-400 text-sm leading-relaxed">{description}</p>
     </div>
   )

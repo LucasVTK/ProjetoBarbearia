@@ -136,7 +136,7 @@ function BarbershopTab({ token }: { token: string }) {
           </code>
           <button
             onClick={copyLink}
-            className="flex items-center gap-1.5 text-xs text-zinc-400 hover:text-white bg-zinc-800 hover:bg-zinc-700 px-3 py-2 rounded-lg transition-colors flex-shrink-0"
+            className="flex items-center gap-1.5 text-xs text-zinc-400 hover:text-zinc-100 bg-zinc-800 hover:bg-zinc-700 px-3 py-2 rounded-lg transition-colors flex-shrink-0"
           >
             {copied ? <><Check className="w-3.5 h-3.5 text-green-400" /> Copiado!</> : <><Copy className="w-3.5 h-3.5" /> Copiar</>}
           </button>
@@ -327,7 +327,7 @@ function ScheduleTab({ token }: { token: string }) {
             <select
               value={selectedProId}
               onChange={e => setSelectedProId(e.target.value)}
-              className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white appearance-none focus:outline-none focus:border-brand-500 pr-8"
+              className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 appearance-none focus:outline-none focus:border-brand-500 pr-8"
             >
               {professionals.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
             </select>
@@ -372,7 +372,7 @@ function ScheduleTab({ token }: { token: string }) {
                     <span className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-all ${day.active ? 'left-5' : 'left-1'}`} />
                   </button>
 
-                  <span className={`text-sm font-semibold w-20 flex-shrink-0 ${day.active ? 'text-white' : 'text-zinc-600'}`}>{label}</span>
+                  <span className={`text-sm font-semibold w-20 flex-shrink-0 ${day.active ? 'text-zinc-100' : 'text-zinc-600'}`}>{label}</span>
 
                   {!day.active && <span className="text-xs text-zinc-600 italic">Folga</span>}
                   {day.active && day.blocks.length === 0 && <span className="text-xs text-orange-400">Nenhum horário</span>}
@@ -397,10 +397,10 @@ function ScheduleTab({ token }: { token: string }) {
                       <div key={block.uid} className="flex items-center gap-2">
                         <span className="text-xs text-zinc-600 w-16 flex-shrink-0">{i === 0 ? 'Abertura' : `Bloco ${i + 1}`}</span>
                         <input type="time" value={block.start} onChange={e => updateBlock(dow, block.uid, 'start', e.target.value)}
-                          className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-brand-500" />
+                          className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-1.5 text-sm text-zinc-100 focus:outline-none focus:border-brand-500" />
                         <span className="text-zinc-600 text-xs">até</span>
                         <input type="time" value={block.end} onChange={e => updateBlock(dow, block.uid, 'end', e.target.value)}
-                          className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-brand-500" />
+                          className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-1.5 text-sm text-zinc-100 focus:outline-none focus:border-brand-500" />
                         {day.blocks.length > 1 && (
                           <button onClick={() => removeBlock(dow, block.uid)} className="ml-auto text-zinc-600 hover:text-red-400 transition-colors">
                             <Trash2 className="w-3.5 h-3.5" />
@@ -438,7 +438,7 @@ export function SettingsPage() {
 
   return (
     <div className="space-y-5">
-      <h1 className="text-xl font-bold text-white">Configurações</h1>
+      <h1 className="text-xl font-bold text-zinc-100">Configurações</h1>
 
       {/* Abas */}
       <div className="flex gap-1 bg-zinc-900 border border-zinc-800 rounded-xl p-1">
@@ -463,7 +463,7 @@ function TabBtn({ active, onClick, icon, children }: {
     <button
       onClick={onClick}
       className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium transition-colors ${
-        active ? 'bg-zinc-800 text-white' : 'text-zinc-500 hover:text-zinc-300'
+        active ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'
       }`}
     >
       {icon}{children}

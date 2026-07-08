@@ -82,14 +82,14 @@ export function FinancePage() {
 
       {/* Cabeçalho + seletor de período */}
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <h1 className="text-xl font-bold text-white">Financeiro</h1>
+        <h1 className="text-xl font-bold text-zinc-100">Financeiro</h1>
         <div className="flex bg-zinc-900 border border-zinc-800 rounded-lg p-1 gap-1">
           {(Object.entries(periodLabels) as [Period, string][]).map(([key, label]) => (
             <button
               key={key}
               onClick={() => setPeriod(key)}
               className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                period === key ? 'bg-brand-500 text-white' : 'text-zinc-400 hover:text-white'
+                period === key ? 'bg-brand-500 text-white' : 'text-zinc-400 hover:text-zinc-100'
               }`}
             >
               {label}
@@ -145,7 +145,7 @@ export function FinancePage() {
           {/* Serviços mais realizados */}
           {data.topServices.length > 0 && (
             <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5">
-              <h2 className="text-sm font-semibold text-white mb-4">Serviços mais realizados</h2>
+              <h2 className="text-sm font-semibold text-zinc-100 mb-4">Serviços mais realizados</h2>
               <div className="space-y-3">
                 {data.topServices.map(s => (
                   <div key={s.name}>
@@ -153,7 +153,7 @@ export function FinancePage() {
                       <span className="text-sm text-zinc-300">{s.name}</span>
                       <div className="flex items-center gap-3">
                         <span className="text-xs text-zinc-500">{s.count}×</span>
-                        <span className="text-sm font-semibold text-white">R$ {fmt(s.revenue)}</span>
+                        <span className="text-sm font-semibold text-zinc-100">R$ {fmt(s.revenue)}</span>
                       </div>
                     </div>
                     <div className="h-1.5 bg-zinc-800 rounded-full overflow-hidden">
@@ -171,7 +171,7 @@ export function FinancePage() {
           {/* Extrato */}
           <div className="bg-zinc-900 border border-zinc-800 rounded-xl">
             <div className="px-5 py-4 border-b border-zinc-800 flex items-center justify-between">
-              <h2 className="text-sm font-semibold text-white">Extrato</h2>
+              <h2 className="text-sm font-semibold text-zinc-100">Extrato</h2>
               <span className="text-xs text-zinc-500">{data.transactions.length} lançamento{data.transactions.length !== 1 ? 's' : ''}</span>
             </div>
 
@@ -189,13 +189,13 @@ export function FinancePage() {
                     <div key={t.id} className="flex items-center gap-3 px-5 py-3.5">
                       <Icon className={`w-4 h-4 flex-shrink-0 ${cfg.color}`} />
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-white truncate">{t.client}</p>
+                        <p className="text-sm font-medium text-zinc-100 truncate">{t.client}</p>
                         <p className="text-xs text-zinc-500 truncate">
                           {t.service} · {formatDate(t.date)} {formatTime(t.date)}
                         </p>
                       </div>
                       <div className="text-right flex-shrink-0">
-                        <p className={`text-sm font-semibold ${t.status === 'DONE' ? 'text-white' : 'text-zinc-600 line-through'}`}>
+                        <p className={`text-sm font-semibold ${t.status === 'DONE' ? 'text-zinc-100' : 'text-zinc-600 line-through'}`}>
                           R$ {fmt(price)}
                         </p>
                         <p className={`text-xs ${cfg.color}`}>{cfg.label}</p>
@@ -221,7 +221,7 @@ function StatCard({ label, value, icon, color, bg }: {
       <div className={`w-8 h-8 ${bg} rounded-lg flex items-center justify-center mb-3 ${color}`}>
         {icon}
       </div>
-      <p className="text-xl font-bold text-white">{value}</p>
+      <p className="text-xl font-bold text-zinc-100">{value}</p>
       <p className="text-xs text-zinc-500 mt-0.5 leading-tight">{label}</p>
     </div>
   )

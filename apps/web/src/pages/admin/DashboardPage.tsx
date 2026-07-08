@@ -121,7 +121,7 @@ export function DashboardPage() {
     <div className="space-y-6">
 
       <div>
-        <h1 className="text-xl font-bold text-white">Dashboard</h1>
+        <h1 className="text-xl font-bold text-zinc-100">Dashboard</h1>
         <p className="text-sm text-zinc-500 capitalize">{today}</p>
       </div>
 
@@ -134,7 +134,7 @@ export function DashboardPage() {
               <div className={`w-9 h-9 ${stat.bg} rounded-lg flex items-center justify-center mb-3`}>
                 <Icon className={`w-4 h-4 ${stat.color}`} />
               </div>
-              <p className="text-2xl font-bold text-white">{stat.value}</p>
+              <p className="text-2xl font-bold text-zinc-100">{stat.value}</p>
               <p className="text-xs text-zinc-500 mt-0.5">{stat.label}</p>
               <p className="text-xs text-zinc-600 mt-1">{stat.sub}</p>
             </div>
@@ -145,7 +145,7 @@ export function DashboardPage() {
       {/* Agenda do dia */}
       <div className="bg-zinc-900 border border-zinc-800 rounded-xl">
         <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-800">
-          <h2 className="text-sm font-semibold text-white">Agenda de hoje</h2>
+          <h2 className="text-sm font-semibold text-zinc-100">Agenda de hoje</h2>
           <Link to="/admin/agenda" className="text-xs text-brand-500 hover:text-brand-400 transition-colors">
             Ver completa →
           </Link>
@@ -173,7 +173,7 @@ export function DashboardPage() {
                   </span>
 
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-white truncate">{apt.client}</p>
+                    <p className="text-sm font-medium text-zinc-100 truncate">{apt.client}</p>
                     <p className="text-xs text-zinc-500 truncate">{apt.service}</p>
                   </div>
 

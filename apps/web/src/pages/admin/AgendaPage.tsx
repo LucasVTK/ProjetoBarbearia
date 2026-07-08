@@ -157,7 +157,7 @@ export function AgendaPage() {
 
       {/* Cabeçalho */}
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-white">Agenda</h1>
+        <h1 className="text-xl font-bold text-zinc-100">Agenda</h1>
       </div>
 
       {error && (
@@ -171,13 +171,13 @@ export function AgendaPage() {
         <div className="flex items-center justify-between mb-4">
           <button
             onClick={() => setSelectedDate(d => addDays(d, -1))}
-            className="p-1.5 rounded-lg hover:bg-zinc-800 text-zinc-400 hover:text-white transition-colors"
+            className="p-1.5 rounded-lg hover:bg-zinc-800 text-zinc-400 hover:text-zinc-100 transition-colors"
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
 
           <div className="text-center">
-            <p className="text-sm font-semibold text-white capitalize">{formatDate(selectedDate)}</p>
+            <p className="text-sm font-semibold text-zinc-100 capitalize">{formatDate(selectedDate)}</p>
             {isToday(selectedDate) && (
               <span className="text-xs text-brand-500 font-medium">Hoje</span>
             )}
@@ -185,7 +185,7 @@ export function AgendaPage() {
 
           <button
             onClick={() => setSelectedDate(d => addDays(d, 1))}
-            className="p-1.5 rounded-lg hover:bg-zinc-800 text-zinc-400 hover:text-white transition-colors"
+            className="p-1.5 rounded-lg hover:bg-zinc-800 text-zinc-400 hover:text-zinc-100 transition-colors"
           >
             <ChevronRight className="w-5 h-5" />
           </button>
@@ -200,7 +200,7 @@ export function AgendaPage() {
             { label: 'Receita',    value: `R$\u00a0${summary.revenue.toFixed(2).replace('.', ',')}` },
           ].map(item => (
             <div key={item.label} className="bg-zinc-800/50 rounded-lg py-2">
-              <p className="text-sm font-bold text-white">{item.value}</p>
+              <p className="text-sm font-bold text-zinc-100">{item.value}</p>
               <p className="text-xs text-zinc-500">{item.label}</p>
             </div>
           ))}
@@ -237,14 +237,14 @@ export function AgendaPage() {
                 } ${selected?.id === apt.id ? 'ring-1 ring-brand-500/30' : ''}`}
               >
                 <div className="text-center w-12 flex-shrink-0">
-                  <p className="text-sm font-mono font-semibold text-white">{formatTime(apt.date)}</p>
+                  <p className="text-sm font-mono font-semibold text-zinc-100">{formatTime(apt.date)}</p>
                   <p className="text-xs text-zinc-600">{duration}min</p>
                 </div>
 
                 <div className={`w-0.5 h-10 rounded-full flex-shrink-0 ${isActive ? 'bg-brand-500' : 'bg-zinc-800'}`} />
 
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-white truncate">{apt.client.name}</p>
+                  <p className="text-sm font-semibold text-zinc-100 truncate">{apt.client.name}</p>
                   <p className="text-xs text-zinc-500 truncate">{apt.service.name}</p>
                 </div>
 
@@ -274,8 +274,8 @@ export function AgendaPage() {
             onClick={e => e.stopPropagation()}
           >
             <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-800">
-              <h3 className="text-base font-semibold text-white">Detalhes</h3>
-              <button onClick={() => setSelected(null)} className="text-zinc-500 hover:text-white transition-colors">✕</button>
+              <h3 className="text-base font-semibold text-zinc-100">Detalhes</h3>
+              <button onClick={() => setSelected(null)} className="text-zinc-500 hover:text-zinc-100 transition-colors">✕</button>
             </div>
 
             <div className="px-5 py-4 space-y-3">
@@ -350,11 +350,11 @@ export function AgendaPage() {
               <div className="w-12 h-12 bg-red-500/10 rounded-full flex items-center justify-center mb-4">
                 <XCircle className="w-6 h-6 text-red-400" />
               </div>
-              <h3 className="text-base font-bold text-white mb-1">
+              <h3 className="text-base font-bold text-zinc-100 mb-1">
                 Deseja realmente cancelar o agendamento deste cliente?
               </h3>
               <p className="text-sm text-zinc-400">
-                <strong className="text-white">{confirmCancel.client.name}</strong> — {confirmCancel.service.name},{' '}
+                <strong className="text-zinc-100">{confirmCancel.client.name}</strong> — {confirmCancel.service.name},{' '}
                 {formatTime(confirmCancel.date)}
               </p>
               <p className="text-xs text-zinc-600 mt-3 leading-relaxed">
@@ -395,7 +395,7 @@ function Row({ icon, label, value }: { icon: React.ReactNode; label: string; val
     <div className="flex items-center gap-3">
       <span className="text-zinc-500 flex-shrink-0">{icon}</span>
       <span className="text-xs text-zinc-500 w-16 flex-shrink-0">{label}</span>
-      <span className="text-sm text-white font-medium">{value}</span>
+      <span className="text-sm text-zinc-100 font-medium">{value}</span>
     </div>
   )
 }
@@ -405,7 +405,7 @@ const colorMap = {
   blue:   'bg-blue-600 hover:bg-blue-700 text-white',
   orange: 'bg-brand-500 hover:bg-brand-600 text-white',
   red:    'bg-red-600 hover:bg-red-700 text-white',
-  zinc:   'bg-zinc-700 hover:bg-zinc-600 text-white',
+  zinc:   'bg-zinc-700 hover:bg-zinc-600 text-zinc-100',
 }
 
 function ActionBtn({ color, onClick, disabled, children }: {
