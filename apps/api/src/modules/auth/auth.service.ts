@@ -136,7 +136,13 @@ export const authService = {
 
     // Mensagem genérica — não revela se o e-mail existe ou não
     if (!user) throw new AppError('E-mail ou senha incorretos', 401)
-    if (!user.active) throw new AppError('Conta desativada', 403)
+    if (!user.active) {
+      throw new AppError(
+        'Sua conta está suspensa e o acesso ao painel foi bloqueado temporariamente. ' +
+        'Nenhum dado foi apagado. Para regularizar e reativar, entre em contato com o suporte.',
+        403
+      )
+    }
 
     // 2. Compara senha com o hash
     const passwordMatch = await bcrypt.compare(input.password, user.passwordHash)

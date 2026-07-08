@@ -8,10 +8,13 @@ function clientIpKey(req: Request): string {
   return ipKeyGenerator(getClientIp(req))
 }
 
-// Protege login/registro contra força bruta (por IP)
+// Protege login/registro contra força bruta (por IP).
+// Só tentativas que FALHARAM contam — logar e deslogar várias vezes
+// (uso legítimo, ex: alternar contas) não consome o limite.
 export const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  limit: 10,
+  limit: 15,
+  skipSuccessfulRequests: true,
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator: clientIpKey,
