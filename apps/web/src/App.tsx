@@ -9,6 +9,7 @@ import { AgendaPage } from './pages/admin/AgendaPage'
 import { ClientsPage } from './pages/admin/ClientsPage'
 import { FinancePage } from './pages/admin/FinancePage'
 import { SettingsPage } from './pages/admin/SettingsPage'
+import { PlatformPage } from './pages/admin/PlatformPage'
 import { BookingPage } from './pages/booking/BookingPage'
 import { CancelPage } from './pages/booking/CancelPage'
 import { ProtectedRoute } from './components/ProtectedRoute'
@@ -37,6 +38,7 @@ export default function App() {
         <Route path="clients"       element={<ClientsPage />} />
         <Route path="finance"       element={<FinancePage />} />
         <Route path="settings"      element={<SettingsPage />} />
+        <Route path="plataforma"    element={<PlatformPage />} />
       </Route>
     </Routes>
   )

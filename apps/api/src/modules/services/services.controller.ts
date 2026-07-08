@@ -16,10 +16,11 @@ export const servicesController = {
   },
 
   // Rota pública — usada pelo app do cliente via slug da barbearia
+  // (barbearia suspensa não aparece)
   async listPublic(req: Request, res: Response, next: NextFunction) {
     try {
       const { slug } = req.params
-      const barbershop = await prisma.barbershop.findUnique({ where: { slug } })
+      const barbershop = await prisma.barbershop.findFirst({ where: { slug, active: true } })
       if (!barbershop) throw new AppError('Barbearia não encontrada', 404)
       const services = await servicesService.listActive(barbershop.id)
       res.json(services)

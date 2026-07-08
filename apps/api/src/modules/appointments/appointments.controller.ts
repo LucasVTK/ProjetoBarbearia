@@ -6,7 +6,8 @@ import { prisma } from '../../config/database'
 import { AppError } from '../../shared/errors/AppError'
 
 async function getBarbershopBySlug(slug: string) {
-  const barbershop = await prisma.barbershop.findUnique({ where: { slug } })
+  // Barbearia suspensa não recebe agendamentos novos
+  const barbershop = await prisma.barbershop.findFirst({ where: { slug, active: true } })
   if (!barbershop) throw new AppError('Barbearia não encontrada', 404)
   return barbershop
 }

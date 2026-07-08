@@ -10,8 +10,9 @@ export const barbershopRouter = Router()
 // Pública — dados básicos para a página de agendamento do cliente
 barbershopRouter.get('/public/:slug', publicLimiter, async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const barbershop = await prisma.barbershop.findUnique({
-      where: { slug: req.params.slug },
+    // Suspensa (active: false) = página pública fora do ar
+    const barbershop = await prisma.barbershop.findFirst({
+      where: { slug: req.params.slug, active: true },
       select: { name: true, slug: true, phone: true, address: true, description: true },
     })
     if (!barbershop) throw new AppError('Barbearia não encontrada', 404)

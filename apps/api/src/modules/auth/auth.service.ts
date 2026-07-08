@@ -136,7 +136,13 @@ export const authService = {
 
     // Mensagem genérica — não revela se o e-mail existe ou não
     if (!user) throw new AppError('E-mail ou senha incorretos', 401)
-    if (!user.active) throw new AppError('Conta desativada', 403)
+    if (!user.active) {
+      throw new AppError(
+        'Sua conta está suspensa e o acesso ao painel foi bloqueado temporariamente. ' +
+        'Nenhum dado foi apagado. Para regularizar e reativar, entre em contato com o suporte.',
+        403
+      )
+    }
 
     // 2. Compara senha com o hash
     const passwordMatch = await bcrypt.compare(input.password, user.passwordHash)
@@ -149,7 +155,12 @@ export const authService = {
     return {
       accessToken,
       refreshToken,
-      user: { id: user.id, name: user.name, email: user.email, role: user.role },
+      // platformAdmin aqui é só para a UI mostrar a aba Plataforma —
+      // a autorização real reconsulta o banco a cada request
+      user: {
+        id: user.id, name: user.name, email: user.email, role: user.role,
+        platformAdmin: user.platformAdmin,
+      },
       barbershop: user.ownedBarbershop
         ? { id: user.ownedBarbershop.id, name: user.ownedBarbershop.name, slug: user.ownedBarbershop.slug }
         : null,

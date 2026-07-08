@@ -43,7 +43,8 @@ export const schedulesController = {
       const { slug } = req.params
       const { date, serviceId, professionalId } = getSlotsQuerySchema.parse(req.query)
 
-      const barbershop = await prisma.barbershop.findUnique({ where: { slug } })
+      // Barbearia suspensa não oferece horários
+      const barbershop = await prisma.barbershop.findFirst({ where: { slug, active: true } })
       if (!barbershop) throw new AppError('Barbearia não encontrada', 404)
 
       const service = await prisma.service.findFirst({
